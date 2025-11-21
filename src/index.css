@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* simple container widths and utilities */
+.container-px { @apply mx-auto max-w-7xl px-4; }
+
+
+:root{
+  --brand: #0E6B64; /* teal green from wireframe */
+  --brand-2: #0A4D48;
+  --accent: #F3B12B; /* golden button */
+}
+.btn{ @apply inline-flex items-center justify-center rounded px-3 py-2 font-medium; }
+.btn-primary{ background: var(--accent); color:#163; }
+.btn-dark{ background: var(--brand); color:white; }
+.btn-outline{ @apply border; }
+.nav-link{ @apply text-white/90 hover:text-white px-2 py-1 rounded; }
+.pill{ @apply text-xs border rounded-full px-2 py-0.5 bg-white; }
+.input{ @apply border rounded px-3 py-2 w-full; }
+.card{ @apply bg-white border rounded-lg; }
