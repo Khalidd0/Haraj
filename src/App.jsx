@@ -18,48 +18,50 @@ import { ListingsProvider } from './context/ListingsContext'
 import { AuthProvider } from './context/AuthContext'
 import { NotiProvider } from './context/NotiContext'
 import { UsersProvider } from './context/UsersContext'
-  import { SearchProvider } from './context/SearchContext'
+import { SearchProvider } from './context/SearchContext'
 import ProtectedRoute from './routes/ProtectedRoute'
-import { useContext } from 'react'
-import { AuthContext } from './context/AuthContext'
 
-function RootRoutes(){
-  const { user } = useContext(AuthContext)
+function RootRoutes() {
   return (
     <Routes>
-      <Route path='/' element={user? <HomePage/> : <LandingPage/>}/>
-      <Route path='/login' element={<LoginPage/>}/>
-      <Route path='/signup' element={<SignUpPage/>}/>
-      <Route path='/verify' element={<VerifyPage/>}/>
-      <Route path='/listing/:id' element={<ListingDetailPage/>}/>
-      <Route path='/post' element={<ProtectedRoute><PostItemPage/></ProtectedRoute>}/>
-      <Route path='/add' element={<ProtectedRoute><AddProductPage/></ProtectedRoute>}/>
-            <Route path='/messages/*' element={<ProtectedRoute><MessagesPage/></ProtectedRoute>}/>
-      <Route path='/profile' element={<ProtectedRoute><ProfilePage/></ProtectedRoute>}/>
-      <Route path='/saved' element={<ProtectedRoute><SavedPage/></ProtectedRoute>}/>
-      <Route path='/notifications' element={<ProtectedRoute><NotificationsPage/></ProtectedRoute>}/>
-      <Route path='/admin' element={<ProtectedRoute><AdminPage/></ProtectedRoute>}/>
-      <Route path='*' element={<NotFound/>}/>
+      {/* Public routes */}
+      <Route path='/' element={<HomePage />} />
+      <Route path='/listing/:id' element={<ListingDetailPage />} />
+      <Route path='/login' element={<LoginPage />} />
+      <Route path='/signup' element={<SignUpPage />} />
+      <Route path='/verify' element={<VerifyPage />} />
+      <Route path='/about' element={<LandingPage />} />
+
+      {/* Protected routes */}
+      <Route path='/post' element={<ProtectedRoute><PostItemPage /></ProtectedRoute>} />
+      <Route path='/add' element={<ProtectedRoute><AddProductPage /></ProtectedRoute>} />
+      <Route path='/messages/*' element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+      <Route path='/profile' element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+      <Route path='/saved' element={<ProtectedRoute><SavedPage /></ProtectedRoute>} />
+      <Route path='/notifications' element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+      <Route path='/admin' element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+
+      <Route path='*' element={<NotFound />} />
     </Routes>
   )
 }
 
-export default function App(){
+export default function App() {
   return (
     <Router>
       <UsersProvider>
-          <SearchProvider>
-        <AuthProvider>
-          <NotiProvider>
-            <ListingsProvider>
-              <AppShell>
-                <RootRoutes/>
-              </AppShell>
-            </ListingsProvider>
-          </NotiProvider>
-        </AuthProvider>
-                </SearchProvider>
-        </UsersProvider>
+        <SearchProvider>
+          <AuthProvider>
+            <NotiProvider>
+              <ListingsProvider>
+                <AppShell>
+                  <RootRoutes />
+                </AppShell>
+              </ListingsProvider>
+            </NotiProvider>
+          </AuthProvider>
+        </SearchProvider>
+      </UsersProvider>
     </Router>
   )
 }
