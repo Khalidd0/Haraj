@@ -38,8 +38,7 @@ src/
 
 
 Team Member:
-
-   NAIF ALHAMMAD
-   ABDULAZIZ ALKATHIRI
-   KHALED MATHBAQ
+   NAIF ALHAMMAD - UI / Testing
+   ABDULAZIZ ALKATHIRI - Integration & UI / Testing
+   KHALED MATHBAQ - Front-End Developer
    
