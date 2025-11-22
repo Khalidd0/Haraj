@@ -36,3 +36,10 @@ src/
 ├─ routes/ → ProtectedRoute.jsx
 └─ data/ → categories.js
 
+
+Team Member:
+
+   NAIF ALHAMMAD
+   ABDULAZIZ ALKATHIRI
+   KHALED MATHBAQ
+   
