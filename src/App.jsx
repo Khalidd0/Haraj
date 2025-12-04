@@ -12,11 +12,9 @@ import MessagesPage from './pages/MessagesPage'
 import ProfilePage from './pages/ProfilePage'
 import AdminPage from './pages/AdminPage'
 import SavedPage from './pages/SavedPage'
-import NotificationsPage from './pages/NotificationsPage'
 import NotFound from './pages/NotFound'
 import { ListingsProvider } from './context/ListingsContext'
 import { AuthProvider } from './context/AuthContext'
-import { NotiProvider } from './context/NotiContext'
 import { SearchProvider } from './context/SearchContext'
 import ProtectedRoute from './routes/ProtectedRoute'
 import { useContext } from 'react'
@@ -33,10 +31,9 @@ function RootRoutes(){
       <Route path='/listing/:id' element={<ListingDetailPage/>}/>
       <Route path='/post' element={<ProtectedRoute><PostItemPage/></ProtectedRoute>}/>
       <Route path='/add' element={<ProtectedRoute><AddProductPage/></ProtectedRoute>}/>
-            <Route path='/messages/*' element={<ProtectedRoute><MessagesPage/></ProtectedRoute>}/>
+      <Route path='/messages/*' element={<ProtectedRoute><MessagesPage/></ProtectedRoute>}/>
       <Route path='/profile' element={<ProtectedRoute><ProfilePage/></ProtectedRoute>}/>
       <Route path='/saved' element={<ProtectedRoute><SavedPage/></ProtectedRoute>}/>
-      <Route path='/notifications' element={<ProtectedRoute><NotificationsPage/></ProtectedRoute>}/>
       <Route path='/admin' element={<ProtectedRoute><AdminPage/></ProtectedRoute>}/>
       <Route path='*' element={<NotFound/>}/>
     </Routes>
@@ -48,13 +45,11 @@ export default function App(){
     <Router>
       <AuthProvider>
         <SearchProvider>
-          <NotiProvider>
-            <ListingsProvider>
-              <AppShell>
-                <RootRoutes/>
-              </AppShell>
-            </ListingsProvider>
-          </NotiProvider>
+          <ListingsProvider>
+            <AppShell>
+              <RootRoutes/>
+            </AppShell>
+          </ListingsProvider>
         </SearchProvider>
       </AuthProvider>
     </Router>

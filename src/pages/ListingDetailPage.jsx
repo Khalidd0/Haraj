@@ -2,14 +2,12 @@ import { useContext, useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ListingsContext } from '../context/ListingsContext'
 import { AuthContext } from '../context/AuthContext'
-import { NotiContext } from '../context/NotiContext'
 import { PICKUP_ZONES } from '../data/pickupZones'
 import { money } from '../utils/formatters'
 
 export default function ListingDetailPage(){
   const { listings, view, sendOffer } = useContext(ListingsContext)
   const { user } = useContext(AuthContext)
-  const { addNoti } = useContext(NotiContext)
   const { id } = useParams()
   const nav = useNavigate()
   const item = listings.find(l => String(l.id) === String(id))
@@ -24,7 +22,6 @@ export default function ListingDetailPage(){
       if(!user) throw new Error('Login to send offers')
       if(isOwner) throw new Error('You cannot send offers to your own listing')
       await sendOffer(item.id, user.id, Number(offer))
-      addNoti('Offer submitted')
     }catch(err){ alert(err.message) }
   }
 

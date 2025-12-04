@@ -1,13 +1,12 @@
 import { useContext, useEffect, useState, useRef } from 'react'
 import { ListingsContext } from '../context/ListingsContext'
 import { useNavigate, useParams } from 'react-router-dom'
-import { NotiContext } from '../context/NotiContext'
 import { money } from '../utils/formatters'
 import { AuthContext } from '../context/AuthContext'
 
 function ThreadItem({ l, onOpen, unread }){
   const last = l.messages[l.messages.length-1]
-  const lastText = last ? (last.type==='offer' ? `Offer • SAR ${l.offers[l.offers.length-1]?.price}` : last.text) : 'No messages yet'
+  const lastText = last ? last.text : 'No messages yet'
   return (
     <button onClick={onOpen} className='w-full text-left px-4 py-3 border-b hover:bg-gray-50 flex items-start justify-between gap-2'>
       <div>
@@ -33,7 +32,6 @@ export default function MessagesPage(){
   )
   const explicitRoom = listings.find(l=> String(l.id)===String(roomId))
   const room = explicitRoom || myThreads.find(l=> String(l.id)===String(roomId)) || myThreads[0] || listings[0]
-  const { addNoti } = useContext(NotiContext)
 
   useEffect(()=>{
     if(room?.id){
@@ -50,7 +48,7 @@ export default function MessagesPage(){
     if(!text.trim()) return
     if(text.length>500) return alert('Max 500 chars')
     if(isSeller && !roomHasOtherParty) return alert('Wait for a buyer to contact you')
-    sendMessage(room.id, user?.id, text).then(()=> addNoti('Message sent')).catch(err=> alert(err.message))
+    sendMessage(room.id, user?.id, text).catch(err=> alert(err.message))
   }
 
   function hasUnread(l){
@@ -87,7 +85,8 @@ function ChatRoom({ room, onSend, meId, meName, sellerId, sellerName, isSeller, 
     if(!from) return 'Unknown'
     if(String(from)===String(meId)) return meName || 'You'
     if(String(from)===String(sellerId)) return sellerName || 'Seller'
-    return room.messages.find(m=> String(m.from)===String(from))?.fromName || 'Buyer'
+    const found = room.messages.find(m=> String(m.from)===String(from))
+    return found?.fromName || 'Buyer'
   }
 
   return (
