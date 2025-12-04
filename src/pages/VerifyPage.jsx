@@ -1,10 +1,26 @@
 import { useContext, useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { UsersContext } from '../context/UsersContext'
+import { AuthContext } from '../context/AuthContext'
+
 export default function VerifyPage(){
-  const [ok,setOk]=useState(false); const [p]=useSearchParams(); const nav=useNavigate(); const email=p.get('email')||''
-  const { markVerified } = useContext(UsersContext)
-  useEffect(()=>{ const t=setTimeout(()=> { markVerified(email); setOk(true) }, 800); return ()=>clearTimeout(t)},[])
+  const [ok,setOk]=useState(false)
+  const [error,setError]=useState('')
+  const [p]=useSearchParams()
+  const nav=useNavigate()
+  const email=p.get('email')||''
+  const { verify } = useContext(AuthContext)
+
+  useEffect(()=>{
+    let active=true
+    const t=setTimeout(async ()=>{
+      try{
+        await verify(email)
+        if(active){ setOk(true) }
+      }catch(err){ if(active) setError(err.message) }
+    }, 500)
+    return ()=>{ active=false; clearTimeout(t) }
+  },[])
+
   return (
     <div className='min-h-screen grid place-items-center'>
       <div className='card p-6 w-full max-w-md text-center space-y-2'>
@@ -13,7 +29,7 @@ export default function VerifyPage(){
         {ok? (<>
           <div className='text-green-700'>Verified! Your account is activated.</div>
           <button onClick={()=>nav('/login')} className='btn btn-dark w-full'>Go to Login</button>
-        </>) : (<div>Waiting for confirmationâ€¦</div>)}
+        </>) : error? <div className='text-red-600'>{error}</div> : (<div>Waiting for confirmation…</div>)}
       </div>
     </div>
   )

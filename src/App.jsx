@@ -17,8 +17,7 @@ import NotFound from './pages/NotFound'
 import { ListingsProvider } from './context/ListingsContext'
 import { AuthProvider } from './context/AuthContext'
 import { NotiProvider } from './context/NotiContext'
-import { UsersProvider } from './context/UsersContext'
-  import { SearchProvider } from './context/SearchContext'
+import { SearchProvider } from './context/SearchContext'
 import ProtectedRoute from './routes/ProtectedRoute'
 import { useContext } from 'react'
 import { AuthContext } from './context/AuthContext'
@@ -47,9 +46,8 @@ function RootRoutes(){
 export default function App(){
   return (
     <Router>
-      <UsersProvider>
-          <SearchProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <SearchProvider>
           <NotiProvider>
             <ListingsProvider>
               <AppShell>
@@ -57,9 +55,8 @@ export default function App(){
               </AppShell>
             </ListingsProvider>
           </NotiProvider>
-        </AuthProvider>
-                </SearchProvider>
-        </UsersProvider>
+        </SearchProvider>
+      </AuthProvider>
     </Router>
   )
 }

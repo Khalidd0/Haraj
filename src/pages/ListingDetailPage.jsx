@@ -1,12 +1,14 @@
 import { useContext, useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ListingsContext } from '../context/ListingsContext'
+import { AuthContext } from '../context/AuthContext'
 import { NotiContext } from '../context/NotiContext'
 import { PICKUP_ZONES } from '../data/pickupZones'
 import { money } from '../utils/formatters'
 
 export default function ListingDetailPage(){
   const { listings, view, sendOffer } = useContext(ListingsContext)
+  const { user } = useContext(AuthContext)
   const { addNoti } = useContext(NotiContext)
   const { id } = useParams()
   const nav = useNavigate()
@@ -14,9 +16,17 @@ export default function ListingDetailPage(){
   const [offer, setOffer] = useState(item? item.price : 0)
   useEffect(()=>{ if(item) view(item.id) }, [id])
   if(!item) return <p>Listing not found.</p>
+  const isOwner = user && item.seller?.id === user.id
 
   function messageSeller(){ nav('/messages/'+item.id) }
-  function submitOffer(){ sendOffer(item.id, 'me', Number(offer)); addNoti('Offer submitted') }
+  async function submitOffer(){
+    try{
+      if(!user) throw new Error('Login to send offers')
+      if(isOwner) throw new Error('You cannot send offers to your own listing')
+      await sendOffer(item.id, user.id, Number(offer))
+      addNoti('Offer submitted')
+    }catch(err){ alert(err.message) }
+  }
 
   return (
     <div className='grid lg:grid-cols-12 gap-6'>
@@ -39,13 +49,15 @@ export default function ListingDetailPage(){
         <div className='card p-4 space-y-3'>
           <div className='text-xl font-semibold'>{item.title}</div>
           <div className='text-2xl font-bold'>{money(item.price)}</div>
+          {isOwner && <div className='text-xs text-gray-600'>You posted this listing.</div>}
           <div>
             <label className='text-xs'>Offer Price (SAR)</label>
             <input type='number' value={offer} onChange={e=>setOffer(Number(e.target.value))} className='input mt-1' />
           </div>
           <div className='flex gap-2'>
-            <button onClick={messageSeller} className='btn btn-dark flex-1'>Message Seller</button>
-            </div>
+            <button onClick={messageSeller} className='btn btn-dark flex-1' disabled={isOwner}>Message Seller</button>
+            <button onClick={submitOffer} className='btn btn-outline' disabled={isOwner}>Send Offer</button>
+          </div>
           </div>
       </aside>
     </div>
