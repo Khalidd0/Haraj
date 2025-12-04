@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 
 const messageSchema = new mongoose.Schema({
   from: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  fromName: { type: String },
   text: { type: String, required: true },
   type: { type: String, enum: ['message', 'offer', 'status'], default: 'message' },
   at: { type: Date, default: Date.now }
@@ -9,6 +10,7 @@ const messageSchema = new mongoose.Schema({
 
 const offerSchema = new mongoose.Schema({
   by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  byName: { type: String },
   price: { type: Number, required: true, min: 1 },
   status: { type: String, enum: ['Pending', 'Accepted', 'Declined'], default: 'Pending' },
   at: { type: Date, default: Date.now }

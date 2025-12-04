@@ -6,8 +6,20 @@ import { AuthContext } from './AuthContext'
 export const ListingsContext = createContext()
 
 function normalizeListing(l) {
-  const offers = Array.isArray(l.offers) ? l.offers.map(o => ({ ...o, id: o._id || o.id, by: o.by?.toString?.() || o.by })) : []
-  const messages = Array.isArray(l.messages) ? l.messages.map(m => ({ ...m, id: m._id || m.id, from: m.from?.toString?.() || m.from, fromName: m.fromName })) : []
+  const offers = Array.isArray(l.offers) ? l.offers.map(o => ({ ...o, id: o._id || o.id, by: o.by?.toString?.() || o.by, byName: o.byName })) : []
+  const nameMap = {}
+  if (l.seller?.id) nameMap[String(l.seller.id)] = l.seller.name
+  offers.forEach(o => { if(o.by && o.byName) nameMap[String(o.by)] = o.byName })
+
+  const messages = Array.isArray(l.messages) ? l.messages.map(m => {
+    const fromId = m.from?.toString?.() || m.from
+    return {
+      ...m,
+      id: m._id || m.id,
+      from: fromId,
+      fromName: m.fromName || nameMap[fromId]
+    }
+  }) : []
   const id = l._id || l.id
   const sellerId = l.seller?.id || l.seller?._id
   return {
@@ -70,7 +82,7 @@ export function ListingsProvider({ children }){
   async function sendMessage(id, from, text){
     if (!user) throw new Error('Login required')
     const sender = from || user.id
-    setListings(arr=> arr.map(l=> l.id===id? {...l, messages:[...l.messages, {id:Date.now(), from:sender, text, type:'message', at:new Date().toISOString()}]}:l))
+    setListings(arr=> arr.map(l=> l.id===id? {...l, messages:[...l.messages, {id:Date.now(), from:sender, fromName:user.name, text, type:'message', at:new Date().toISOString()}]}:l))
     addChat(id)
     try{
       await sendListingMessage(id, text)
@@ -82,8 +94,8 @@ export function ListingsProvider({ children }){
   async function sendOffer(id, from, price){
     if (!user) throw new Error('Login required')
     const by = from || user.id
-    const offer = { id: Date.now(), by, price, status:'Pending', at:new Date().toISOString() }
-    setListings(arr=> arr.map(l=> l.id===id? {...l, offers:[...l.offers, offer], messages:[...l.messages, {id:offer.id+1, from, text:`Offer: SAR ${price}`, type:'offer', at:new Date().toISOString()}]}:l))
+    const offer = { id: Date.now(), by, byName:user.name, price, status:'Pending', at:new Date().toISOString() }
+    setListings(arr=> arr.map(l=> l.id===id? {...l, offers:[...l.offers, offer], messages:[...l.messages, {id:offer.id+1, from, fromName:user.name, text:`Offer: SAR ${price}`, type:'offer', at:new Date().toISOString()}]}:l))
     addChat(id)
     try{
       const res = await createOffer(id, price)

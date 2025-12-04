@@ -87,7 +87,7 @@ function ChatRoom({ room, onSend, meId, meName, sellerId, sellerName, isSeller, 
     if(!from) return 'Unknown'
     if(String(from)===String(meId)) return meName || 'You'
     if(String(from)===String(sellerId)) return sellerName || 'Seller'
-    return 'Buyer'
+    return room.messages.find(m=> String(m.from)===String(from))?.fromName || 'Buyer'
   }
 
   return (
