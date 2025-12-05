@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { useContext } from 'react'
 import AppShell from './components/layout/AppShell'
 import LandingPage from './pages/LandingPage'
 import HomePage from './pages/HomePage'
@@ -14,11 +15,12 @@ import AdminPage from './pages/AdminPage'
 import SavedPage from './pages/SavedPage'
 import NotFound from './pages/NotFound'
 import { ListingsProvider } from './context/ListingsContext'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, AuthContext } from './context/AuthContext'
 import { SearchProvider } from './context/SearchContext'
 import ProtectedRoute from './routes/ProtectedRoute'
 
 function RootRoutes() {
+  const { user } = useContext(AuthContext)
   return (
     <Routes>
       <Route path='/' element={user? <HomePage/> : <LandingPage/>}/>
