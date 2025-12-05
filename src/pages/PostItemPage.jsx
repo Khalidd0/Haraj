@@ -3,34 +3,51 @@ import { ListingsContext } from '../context/ListingsContext'
 import { CATEGORIES } from '../data/categories'
 import { PICKUP_ZONES } from '../data/pickupZones'
 import { useNavigate } from 'react-router-dom'
+import { uploadImage } from '../api/uploads'
 
 export default function PostItemPage(){
   const { createListing } = useContext(ListingsContext)
   const nav = useNavigate()
-  const [form, setForm] = useState({ title:'', price:'', categoryId:'1', condition:'Like New', zoneId:'1', image:'', description:'' })
+  const [form, setForm] = useState({ title:'', price:'', categoryId:'1', condition:'Like New', zoneId:'1', description:'' })
+  const [images, setImages] = useState([])
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
-  function submit(e){
+  async function submit(e){
     e.preventDefault()
-    if(!form.title || !form.price || Number(form.price)<=0) return setError('Provide title and valid price')
-    createListing({
-      id: Math.floor(Math.random()*100000),
-      title: form.title,
-      price: Number(form.price),
-      categoryId: Number(form.categoryId),
-      condition: form.condition,
-      zoneId: Number(form.zoneId),
-      images: [form.image || 'https://images.unsplash.com/photo-1518779578993-ec3579fee39f'],
-      seller: { id: 'me', name: 'You', rating: 5 },
-      createdAt: new Date().toISOString(),
-      favorite: false,
-      status: 'active',
-      description: form.description || 'No description'
-    })
-    nav('/')
+    try{
+      if(!form.title || !form.price || Number(form.price)<=0) throw new Error('Provide title and valid price')
+      const urls = images.map(i=>i.trim()).filter(Boolean)
+      if(!urls.length) throw new Error('Please upload at least one image')
+      await createListing({
+        title: form.title,
+        price: Number(form.price),
+        categoryId: Number(form.categoryId),
+        condition: form.condition,
+        zoneId: Number(form.zoneId),
+        images: urls,
+        description: form.description || 'No description'
+      })
+      nav('/')
+    }catch(err){ setError(err.message) }
+  }
+
+  async function onFilesSelected(e){
+    const files = Array.from(e.target.files || [])
+    if(!files.length) return
+    setUploading(true)
+    try{
+      const uploaded = []
+      for (const f of files) {
+        const url = await uploadImage(f)
+        uploaded.push(url)
+      }
+      setImages(arr=> [...arr, ...uploaded])
+    }catch(err){ setError(err.message) } finally { setUploading(false) }
   }
 
   const set = (k)=>(e)=> setForm(f=> ({...f, [k]: e.target.value}))
+  const removeImage = (idx)=> setImages(arr=> arr.filter((_,i)=> i!==idx))
 
   return (
     <div className='max-w-3xl mx-auto'>
@@ -64,10 +81,24 @@ export default function PostItemPage(){
             </select>
           </div>
         </div>
-        <div>
-          <label className='text-sm'>Photo URL (for demo)</label>
-          <input value={form.image} onChange={set('image')} className='mt-1 border rounded w-full px-3 py-2' placeholder='https://…'/>
-          <div className='text-xs text-gray-500 mt-1'>Accepts JPG/PNG ≤ 5MB (simulated)</div>
+        <div className='space-y-2'>
+          <div className='flex items-center justify-between'>
+            <label className='text-sm'>Upload photos</label>
+            <label className='text-sm underline cursor-pointer'>
+              Select files
+              <input type='file' accept='image/*' multiple className='hidden' onChange={onFilesSelected}/>
+            </label>
+          </div>
+          <div className='space-y-1'>
+            {images.map((url, idx)=> (
+              <div key={idx} className='flex items-center justify-between bg-gray-50 border rounded px-2 py-1 text-sm'>
+                <span className='truncate max-w-[75%]' title={url}>{url}</span>
+                <button type='button' onClick={()=>removeImage(idx)} className='text-red-600 text-xs underline'>Remove</button>
+              </div>
+            ))}
+            {!images.length && <div className='text-xs text-gray-500'>No images yet. Upload JPG/PNG up to 5MB each.</div>}
+          </div>
+          <div className='text-xs text-gray-500'>{uploading ? 'Uploading...' : 'Images are stored locally under /uploads.'}</div>
         </div>
         <div>
           <label className='text-sm'>Description</label>
@@ -75,7 +106,7 @@ export default function PostItemPage(){
         </div>
         {error && <div className='text-sm text-red-600'>{error}</div>}
         <div className='flex items-center justify-between'>
-          <button className='bg-gray-900 text-white px-4 py-2 rounded'>Publish</button>
+          <button className='bg-gray-900 text-white px-4 py-2 rounded' disabled={uploading}>Publish</button>
           <div className='text-xs text-gray-500'>Visible to KFUPM accounts only.</div>
         </div>
       </form>

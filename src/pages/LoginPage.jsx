@@ -5,7 +5,7 @@ import { AuthContext } from '../context/AuthContext'
 export default function LoginPage(){
   const nav = useNavigate(); const { login } = useContext(AuthContext)
   const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [error, setError]=useState('')
-  const submit=(e)=>{ e.preventDefault(); try{ if(!email.endsWith('@kfupm.edu.sa')) throw new Error('Use @kfupm.edu.sa'); if(password.length<8 || !(/[a-z]/i.test(password)&&/\d/.test(password))) throw new Error('Password ≥8 with letters & digits'); login({email,password}); nav('/') }catch(err){ setError(err.message) } }
+  const submit= async (e)=>{ e.preventDefault(); try{ if(!email.endsWith('@kfupm.edu.sa')) throw new Error('Use @kfupm.edu.sa'); if(password.length<8 || !(/[a-z]/i.test(password)&&/\d/.test(password))) throw new Error('Password must be >=8 with letters & digits'); await login({email,password}); nav('/') }catch(err){ setError(err.message) } }
   return (
     <div className="min-h-[78vh] grid md:grid-cols-2 gap-8 container-px">
       <div className="hidden md:flex flex-col justify-center">

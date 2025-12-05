@@ -7,9 +7,9 @@ export default function ListingCard({ item, onSave }){
   return (
     <div className="card overflow-hidden">
       <Link to={`/listing/${item.id}`}>
-        <div className="aspect-[16/9] bg-gray-100 relative">
+        <div className="aspect-[16/9] bg-gray-100 relative flex items-center justify-center">
           {status && <span className="absolute top-2 left-2 text-xs bg-black/70 text-white rounded px-2 py-0.5 capitalize">{status}</span>}
-          <img src={item.images?.[0]} className="w-full h-full object-cover"/>
+          <img src={item.images?.[0]} className="max-h-full max-w-full object-contain"/>
         </div>
       </Link>
       <div className="p-3 space-y-1">

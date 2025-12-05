@@ -1,20 +1,21 @@
 import { useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { UsersContext } from '../context/UsersContext'
+import { AuthContext } from '../context/AuthContext'
 
 export default function SignUpPage(){
-  const nav = useNavigate();
-  const { signup } = useContext(UsersContext)
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  function submit(e){
-    e.preventDefault();
+  const nav = useNavigate()
+  const { register } = useContext(AuthContext)
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  async function submit(e){
+    e.preventDefault()
     try{
       if(!email.endsWith('@kfupm.edu.sa')) throw new Error('Email must end with @kfupm.edu.sa')
-      if(password.length < 8 || !(/[a-z]/i.test(password)&&/\d/.test(password))) throw new Error('Password ≥ 8 with letters & digits')
-      signup({ name, email, password })
+      if(password.length < 8 || !(/[a-z]/i.test(password)&&/\d/.test(password))) throw new Error('Password must be >=8 with letters & digits')
+      await register({ name, email, password })
       nav('/verify?email='+encodeURIComponent(email))
     }catch(err){ setError(err.message) }
   }

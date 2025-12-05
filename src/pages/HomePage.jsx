@@ -6,9 +6,9 @@ import ListingCard from '../components/ui/ListingCard'
 import PaginationBar from '../components/ui/PaginationBar'
 import { CATEGORIES } from '../data/categories'
 
-export default function HomePage() {
-  const { listings, toggleFav } = useContext(ListingsContext)
-  const { term } = useContext(SearchContext)
+export default function HomePage(){
+  const { listings, setSaved } = useContext(ListingsContext)
+    const { term } = useContext(SearchContext)
   const [search, setSearch] = useState('')
   const [cat, setCat] = useState('all')
   const [sort, setSort] = useState('new')
@@ -103,9 +103,7 @@ export default function HomePage() {
         </div>
 
         <div className='grid sm:grid-cols-2 lg:grid-cols-3 gap-4'>
-          {filtered.map(l => (
-            <ListingCard key={l.id} item={l} onSave={toggleFav} />
-          ))}
+        {filtered.map(l => <ListingCard key={l.id} item={l} onSave={(id)=> setSaved(id, !l.favorite)} />)}
         </div>
 
         {!filtered.length && (
