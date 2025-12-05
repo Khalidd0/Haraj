@@ -17,11 +17,8 @@ import { ListingsProvider } from './context/ListingsContext'
 import { AuthProvider } from './context/AuthContext'
 import { SearchProvider } from './context/SearchContext'
 import ProtectedRoute from './routes/ProtectedRoute'
-import { useContext } from 'react'
-import { AuthContext } from './context/AuthContext'
 
-function RootRoutes(){
-  const { user } = useContext(AuthContext)
+function RootRoutes() {
   return (
     <Routes>
       <Route path='/' element={user? <HomePage/> : <LandingPage/>}/>
@@ -40,7 +37,7 @@ function RootRoutes(){
   )
 }
 
-export default function App(){
+export default function App() {
   return (
     <Router>
       <AuthProvider>
