@@ -3,11 +3,11 @@ import { useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 export default function SavedPage(){
-  const { listings, toggleFav } = useContext(ListingsContext)
+  const { listings, setSaved } = useContext(ListingsContext)
   const nav = useNavigate()
   const saved = listings.filter(l=> l.favorite)
   const [info, setInfo] = useState('')
-  function unsave(id){ toggleFav(id); setInfo('Removed from saved items') }
+  function unsave(id){ setSaved(id, false); setInfo('Removed from saved items') }
   return (
     <div className='space-y-3'>
       <h2 className='text-xl font-semibold'>Saved items</h2>

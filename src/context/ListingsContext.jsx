@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { listListings, createListing as apiCreate, incrementMetric, sendListingMessage, createOffer, updateOffer, updateListing, deleteListing } from '../api/listings'
+import { listListings, createListing as apiCreate, incrementMetric, sendListingMessage, createOffer, updateOffer, updateListing, deleteListing, listMessages, getSaved, saveListing, unsaveListing } from '../api/listings'
 import { getApiBase } from '../api/client'
 import { AuthContext } from './AuthContext'
 
@@ -7,19 +7,6 @@ export const ListingsContext = createContext()
 
 function normalizeListing(l) {
   const offers = Array.isArray(l.offers) ? l.offers.map(o => ({ ...o, id: o._id || o.id, by: o.by?.toString?.() || o.by, byName: o.byName })) : []
-  const nameMap = {}
-  if (l.seller?.id) nameMap[String(l.seller.id)] = l.seller.name
-  offers.forEach(o => { if(o.by && o.byName) nameMap[String(o.by)] = o.byName })
-
-  const messages = Array.isArray(l.messages) ? l.messages.map(m => {
-    const fromId = m.from?.toString?.() || m.from
-    return {
-      ...m,
-      id: m._id || m.id,
-      from: fromId,
-      fromName: m.fromName || nameMap[fromId]
-    }
-  }) : []
   const id = l._id || l.id
   const sellerId = l.seller?.id || l.seller?._id
   return {
@@ -27,10 +14,22 @@ function normalizeListing(l) {
     favorite: false,
     metrics: { views: 0, saves: 0, chats: 0, ...(l.metrics || {}) },
     offers,
-    messages,
     ...l,
+    messages: [],
     images: Array.isArray(l.images) ? l.images.map(addBase) : [],
     seller: l.seller ? { ...l.seller, id: sellerId } : l.seller
+  }
+}
+
+function normalizeMessage(m){
+  const fromId = m.from?.toString?.() || m.from
+  const toId = m.to?.toString?.() || m.to
+  return {
+    ...m,
+    id: m._id || m.id,
+    from: fromId,
+    to: toId,
+    at: m.at || m.createdAt || new Date().toISOString()
   }
 }
 
@@ -44,15 +43,29 @@ function addBase(url){
 export function ListingsProvider({ children }){
   const { token, user } = useContext(AuthContext)
   const [listings, setListings] = useState([])
+  const [messagesByListing, setMessagesByListing] = useState({})
+  const [savedSet, setSavedSet] = useState(new Set())
 
   useEffect(() => { loadListings() }, [])
+  useEffect(() => { if(user) loadSaved(); else setSavedSet(new Set()) }, [user?.id])
 
   async function loadListings() {
     try{
       const res = await listListings()
-      setListings(res.listings.map(normalizeListing))
+      setListings(res.listings.map(normalizeListing).map(l => ({ ...l, favorite: savedSet.has(String(l.id)) })))
     }catch(err){
       console.error('Failed to load listings', err.message)
+    }
+  }
+
+  async function loadSaved(){
+    try{
+      const res = await getSaved()
+      const ids = new Set((res.saved || []).map(s => String(s.listingId)))
+      setSavedSet(ids)
+      setListings(arr => arr.map(l => ({ ...l, favorite: ids.has(String(l.id)) })))
+    }catch(err){
+      console.error('Failed to load saved', err.message)
     }
   }
 
@@ -66,7 +79,21 @@ export function ListingsProvider({ children }){
     try{ await incrementMetric(id, 'chats') }catch(err){ console.warn('metric chat failed', err.message) }
   }
 
-  const toggleFav = (id)=> setListings(arr=> arr.map(l=> l.id===id? {...l, favorite: !l.favorite, metrics:{...l.metrics, saves:l.favorite? l.metrics.saves-1 : l.metrics.saves+1}}:l))
+  async function setSaved(id, nextFavorite){
+    if (!user) throw new Error('Login required')
+    setListings(arr=> arr.map(l=> l.id===id? {...l, favorite: nextFavorite, metrics:{...l.metrics, saves: nextFavorite ? l.metrics.saves+1 : Math.max(0, l.metrics.saves-1)}}:l))
+    setSavedSet(prev => {
+      const copy = new Set(prev)
+      if (nextFavorite) copy.add(String(id)); else copy.delete(String(id))
+      return copy
+    })
+    try{
+      if(nextFavorite) await saveListing(id)
+      else await unsaveListing(id)
+    }catch(err){
+      console.warn('save toggle failed', err.message)
+    }
+  }
 
   const createListing = async (payload)=>{
     const res = await apiCreate(payload)
@@ -79,13 +106,31 @@ export function ListingsProvider({ children }){
     return true
   }
 
-  async function sendMessage(id, from, text){
+  async function loadMessagesForListing(listingId){
+    if (!listingId) return []
+    try{
+      const res = await listMessages(listingId)
+      const msgs = Array.isArray(res.messages) ? res.messages.map(normalizeMessage) : []
+      setMessagesByListing(map => ({ ...map, [listingId]: msgs }))
+      return msgs
+    }catch(err){
+      console.error('Failed to load messages', err.message)
+      return []
+    }
+  }
+
+  function getMessages(listingId){
+    return messagesByListing[listingId] || []
+  }
+
+  async function sendMessage(id, from, text, to){
     if (!user) throw new Error('Login required')
     const sender = from || user.id
-    setListings(arr=> arr.map(l=> l.id===id? {...l, messages:[...l.messages, {id:Date.now(), from:sender, fromName:user.name, text, type:'message', at:new Date().toISOString()}]}:l))
+    const optimistic = { id: Date.now(), from: sender, to, fromName: user.name, text, type: 'message', at: new Date().toISOString() }
+    setMessagesByListing(map => ({ ...map, [id]: [...(map[id] || []), optimistic] }))
     addChat(id)
     try{
-      await sendListingMessage(id, text)
+      await sendListingMessage(id, text, to)
     }catch(err){
       console.warn('send message failed', err.message)
     }
@@ -95,7 +140,7 @@ export function ListingsProvider({ children }){
     if (!user) throw new Error('Login required')
     const by = from || user.id
     const offer = { id: Date.now(), by, byName:user.name, price, status:'Pending', at:new Date().toISOString() }
-    setListings(arr=> arr.map(l=> l.id===id? {...l, offers:[...l.offers, offer], messages:[...l.messages, {id:offer.id+1, from, fromName:user.name, text:`Offer: SAR ${price}`, type:'offer', at:new Date().toISOString()}]}:l))
+    setListings(arr=> arr.map(l=> l.id===id? {...l, offers:[...l.offers, offer]}:l))
     addChat(id)
     try{
       const res = await createOffer(id, price)
@@ -109,7 +154,7 @@ export function ListingsProvider({ children }){
   async function setOfferStatus(listingId, offerId, status){
     try{
       const res = await updateOffer(listingId, offerId, status)
-      setListings(arr=> arr.map(l=> l.id===listingId? {...l, offers: res.offers, messages:[...l.messages, {id:Date.now(), from:'system', type:'status', text:`Offer ${status}`, at:new Date().toISOString()}]}:l))
+      setListings(arr=> arr.map(l=> l.id===listingId? {...l, offers: res.offers}:l))
     }catch(err){
       console.warn('offer status failed', err.message)
     }
@@ -134,7 +179,7 @@ export function ListingsProvider({ children }){
   }
 
   return (
-    <ListingsContext.Provider value={{ listings, view, addChat, toggleFav, createListing, ensureThread, sendMessage, sendOffer, setOfferStatus, setStatus, remove, reload: loadListings }}>
+    <ListingsContext.Provider value={{ listings, messagesByListing, getMessages, loadMessagesForListing, view, addChat, setSaved, savedSet, createListing, ensureThread, sendMessage, sendOffer, setOfferStatus, setStatus, remove, reload: loadListings }}>
       {children}
     </ListingsContext.Provider>
   )

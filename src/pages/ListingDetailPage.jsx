@@ -11,8 +11,10 @@ export default function ListingDetailPage(){
   const { id } = useParams()
   const nav = useNavigate()
   const item = listings.find(l => String(l.id) === String(id))
+  const [activeIdx, setActiveIdx] = useState(0)
   const [offer, setOffer] = useState(item? item.price : 0)
   useEffect(()=>{ if(item) view(item.id) }, [id])
+  useEffect(()=>{ setActiveIdx(0); if(item) setOffer(item.price) }, [item?.id])
   if(!item) return <p>Listing not found.</p>
   const isOwner = user && item.seller?.id === user.id
 
@@ -29,10 +31,23 @@ export default function ListingDetailPage(){
     <div className='grid lg:grid-cols-12 gap-6'>
       <div className='lg:col-span-7'>
         <div className='card overflow-hidden'>
-          <div className='aspect-video bg-gray-100'>
-            <img src={item.images[0]} className='w-full h-full object-cover'/>
+          <div className='aspect-video bg-gray-100 flex items-center justify-center'>
+            <img src={item.images[activeIdx] || item.images[0]} className='max-h-full max-w-full object-contain'/>
           </div>
         </div>
+        {item.images?.length > 1 && (
+          <div className='mt-3 flex gap-2 overflow-x-auto pb-1'>
+            {item.images.map((src, idx)=>(
+              <button
+                key={idx}
+                onClick={()=> setActiveIdx(idx)}
+                className={`border rounded-md overflow-hidden w-20 h-20 flex items-center justify-center ${activeIdx===idx? 'ring-2 ring-[var(--brand)]' : 'border-gray-200'}`}
+              >
+                <img src={src} className='object-cover w-full h-full'/>
+              </button>
+            ))}
+          </div>
+        )}
         <div className='mt-4 card p-4'>
           <h3 className='font-semibold mb-2'>Key Features</h3>
           <ul className='text-sm list-disc pl-5 space-y-1'>

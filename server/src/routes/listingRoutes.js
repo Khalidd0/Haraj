@@ -5,6 +5,7 @@ import User from '../models/User.js'
 import { authenticate, requireVerified } from '../middleware/auth.js'
 import { validateRequest } from '../middleware/validateRequest.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
+import Message from '../models/Message.js'
 
 const router = Router()
 
@@ -144,15 +145,50 @@ router.post(
   '/:id/messages',
   authenticate,
   requireVerified,
-  [param('id').isMongoId(), body('text').isLength({ min: 1 })],
+  [param('id').isMongoId(), body('text').isLength({ min: 1 }), body('to').optional().isMongoId()],
   validateRequest,
   asyncHandler(async (req, res) => {
     const listing = await Listing.findById(req.params.id)
     if (!listing) return res.status(404).json({ message: 'Listing not found' })
-    listing.messages.push({ from: req.user.id, fromName: req.user.name, text: req.body.text, type: 'message' })
+    const isSeller = listing.seller.id.toString() === req.user.id
+    if (isSeller && !req.body.to) {
+      return res.status(400).json({ message: 'Recipient required for seller messages' })
+    }
+    const to = isSeller ? req.body.to : listing.seller.id
+    await Message.create({
+      listingId: listing.id,
+      from: req.user.id,
+      to,
+      fromName: req.user.name,
+      text: req.body.text,
+      type: 'message'
+    })
     listing.metrics.chats = (listing.metrics.chats || 0) + 1
     await listing.save()
-    res.status(201).json({ messages: listing.messages })
+    res.status(201).json({ ok: true })
+  })
+)
+
+router.get(
+  '/:id/messages',
+  authenticate,
+  requireVerified,
+  [param('id').isMongoId(), query('buyerId').optional().isMongoId()],
+  validateRequest,
+  asyncHandler(async (req, res) => {
+    const listing = await Listing.findById(req.params.id)
+    if (!listing) return res.status(404).json({ message: 'Listing not found' })
+    const isSeller = listing.seller.id.toString() === req.user.id
+    const filter = { listingId: listing.id }
+    if (isSeller) {
+      if (req.query.buyerId) {
+        filter.$or = [{ from: req.query.buyerId }, { to: req.query.buyerId }]
+      }
+    } else {
+      filter.$or = [{ from: req.user.id }, { to: req.user.id }]
+    }
+    const messages = await Message.find(filter).sort({ at: 1, createdAt: 1 })
+    res.json({ messages })
   })
 )
 
@@ -167,7 +203,6 @@ router.post(
     if (!listing) return res.status(404).json({ message: 'Listing not found' })
     const offer = { by: req.user.id, byName: req.user.name, price: req.body.price, status: 'Pending' }
     listing.offers.push(offer)
-    listing.messages.push({ from: req.user.id, fromName: req.user.name, text: `Offer: SAR ${req.body.price}`, type: 'offer' })
     listing.metrics.chats = (listing.metrics.chats || 0) + 1
     await listing.save()
     res.status(201).json({ offers: listing.offers })
@@ -189,7 +224,6 @@ router.patch(
     const offer = listing.offers.id(req.params.offerId)
     if (!offer) return res.status(404).json({ message: 'Offer not found' })
     offer.status = req.body.status
-    listing.messages.push({ from: req.user.id, text: `Offer ${req.body.status}`, type: 'status' })
     await listing.save()
     res.json({ offers: listing.offers })
   })

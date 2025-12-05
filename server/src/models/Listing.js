@@ -1,13 +1,5 @@
 import mongoose from 'mongoose'
 
-const messageSchema = new mongoose.Schema({
-  from: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  fromName: { type: String },
-  text: { type: String, required: true },
-  type: { type: String, enum: ['message', 'offer', 'status'], default: 'message' },
-  at: { type: Date, default: Date.now }
-}, { _id: true })
-
 const offerSchema = new mongoose.Schema({
   by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   byName: { type: String },
@@ -35,8 +27,7 @@ const listingSchema = new mongoose.Schema({
     saves: { type: Number, default: 0 },
     chats: { type: Number, default: 0 }
   },
-  offers: { type: [offerSchema], default: [] },
-  messages: { type: [messageSchema], default: [] }
+  offers: { type: [offerSchema], default: [] }
 }, { timestamps: true })
 
 listingSchema.index({ title: 'text', description: 'text' })

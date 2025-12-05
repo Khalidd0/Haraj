@@ -29,8 +29,27 @@ export function incrementMetric(id, metric) {
   return apiFetch(`/listings/${id}/metrics`, { method: 'POST', body: { metric } })
 }
 
-export function sendListingMessage(id, text) {
-  return apiFetch(`/listings/${id}/messages`, { method: 'POST', body: { text } })
+export function listMessages(id, buyerId) {
+  const qs = buyerId ? `?buyerId=${buyerId}` : ''
+  return apiFetch(`/listings/${id}/messages${qs}`)
+}
+
+export function sendListingMessage(id, text, to) {
+  const body = { text }
+  if (to) body.to = to
+  return apiFetch(`/listings/${id}/messages`, { method: 'POST', body })
+}
+
+export function getSaved() {
+  return apiFetch('/saved')
+}
+
+export function saveListing(id) {
+  return apiFetch(`/saved/${id}`, { method: 'POST' })
+}
+
+export function unsaveListing(id) {
+  return apiFetch(`/saved/${id}`, { method: 'DELETE' })
 }
 
 export function createOffer(id, price) {

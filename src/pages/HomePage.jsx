@@ -1,13 +1,13 @@
 import { useContext, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ListingsContext } from '../context/ListingsContext'
-  import { SearchContext } from '../context/SearchContext'
+import { SearchContext } from '../context/SearchContext'
 import ListingCard from '../components/ui/ListingCard'
 import PaginationBar from '../components/ui/PaginationBar'
 import { CATEGORIES } from '../data/categories'
 
 export default function HomePage(){
-  const { listings, toggleFav } = useContext(ListingsContext)
+  const { listings, setSaved } = useContext(ListingsContext)
     const { term } = useContext(SearchContext)
   const [search, setSearch] = useState('')
   const [cat, setCat] = useState('all')
@@ -55,7 +55,7 @@ export default function HomePage(){
           <Link to='/post' className='bg-gray-900 text-white px-3 py-2 rounded text-sm'>Post Item</Link>
         </div>
         <div className='grid sm:grid-cols-2 lg:grid-cols-3 gap-4'>
-          {filtered.map(l => <ListingCard key={l.id} item={l} onSave={toggleFav} />)}
+        {filtered.map(l => <ListingCard key={l.id} item={l} onSave={(id)=> setSaved(id, !l.favorite)} />)}
         </div>
         <PaginationBar/>
       </section>

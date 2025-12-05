@@ -1,29 +1,14 @@
 import { Router } from 'express'
 import multer from 'multer'
-import path from 'path'
-import fs from 'fs'
-import { fileURLToPath } from 'url'
+import { Readable } from 'stream'
+import { Types, mongoose } from '../config/db.js'
 import { authenticate, requireVerified } from '../middleware/auth.js'
 
-const router = Router()
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const uploadPath = path.join(__dirname, '../../uploads')
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true })
-    }
-    cb(null, uploadPath)
-  },
-  filename: function (req, file, cb) {
-    const safeName = file.originalname.replace(/[^a-zA-Z0-9\.\-_]/g, '_')
-    cb(null, `${Date.now()}-${safeName}`)
-  }
-})
+const apiRouter = Router()
+const serveRouter = Router()
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
@@ -33,10 +18,49 @@ const upload = multer({
   }
 })
 
-router.post('/', authenticate, requireVerified, upload.single('image'), (req, res) => {
-  if (!req.file) return res.status(400).json({ message: 'No file uploaded' })
-  const url = `/uploads/${req.file.filename}`
-  res.status(201).json({ url })
+function getBucket() {
+  if (!mongoose.connection?.db) throw new Error('Database not connected')
+  return new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: 'uploads' })
+}
+
+async function saveToGridFS(file) {
+  const bucket = getBucket()
+  const safeName = file.originalname.replace(/[^a-zA-Z0-9\.\-_]/g, '_') || 'upload'
+  const uploadStream = bucket.openUploadStream(safeName, { contentType: file.mimetype })
+  const stream = new Readable()
+  stream.push(file.buffer)
+  stream.push(null)
+  await new Promise((resolve, reject) => {
+    stream.pipe(uploadStream).on('error', reject).on('finish', resolve)
+  })
+  return uploadStream.id
+}
+
+apiRouter.post('/', authenticate, requireVerified, upload.single('image'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' })
+    const id = await saveToGridFS(req.file)
+    const url = `/uploads/${id}`
+    res.status(201).json({ url, id })
+  } catch (err) {
+    next(err)
+  }
 })
 
-export default router
+serveRouter.get('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params
+    if (!Types.ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid file id' })
+    const bucket = getBucket()
+    const files = await bucket.find({ _id: new Types.ObjectId(id) }).toArray()
+    if (!files || !files.length) return res.status(404).json({ message: 'File not found' })
+    const file = files[0]
+    res.set('Content-Type', file.contentType || 'application/octet-stream')
+    bucket.openDownloadStream(file._id).pipe(res)
+  } catch (err) {
+    next(err)
+  }
+})
+
+export { apiRouter, serveRouter }
+export default apiRouter

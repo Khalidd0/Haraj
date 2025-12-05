@@ -12,3 +12,4 @@ export async function connectDB(uri) {
 }
 
 export { mongoose }
+export const Types = mongoose.Types
