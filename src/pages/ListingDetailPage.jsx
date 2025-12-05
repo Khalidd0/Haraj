@@ -49,6 +49,12 @@ export default function ListingDetailPage(){
           </div>
         )}
         <div className='mt-4 card p-4'>
+          <h3 className='font-semibold mb-2'>Description</h3>
+          <p className='text-sm text-gray-700 whitespace-pre-line'>
+            {item.description || 'No description provided.'}
+          </p>
+        </div>
+        <div className='mt-4 card p-4'>
           <h3 className='font-semibold mb-2'>Key Features</h3>
           <ul className='text-sm list-disc pl-5 space-y-1'>
             <li>On-campus pickup at {PICKUP_ZONES.find(z=>z.id===item.zoneId)?.name}</li>
@@ -61,7 +67,18 @@ export default function ListingDetailPage(){
         <div className='card p-4 space-y-3'>
           <div className='text-xl font-semibold'>{item.title}</div>
           <div className='text-2xl font-bold'>{money(item.price)}</div>
-          {isOwner && <div className='text-xs text-gray-600'>You posted this listing.</div>}
+          {isOwner && (
+            <div className='flex items-center justify-between text-xs text-gray-600'>
+              <span>You posted this listing.</span>
+              <button
+                type='button'
+                onClick={()=> nav('/listing/'+item.id+'/edit')}
+                className='underline text-[var(--brand)]'
+              >
+                Edit listing
+              </button>
+            </div>
+          )}
           <div>
             <label className='text-xs'>Offer Price (SAR)</label>
             <input type='number' value={offer} onChange={e=>setOffer(Number(e.target.value))} className='input mt-1' />

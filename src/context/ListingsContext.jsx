@@ -101,6 +101,14 @@ export function ListingsProvider({ children }){
     return res.listing
   }
 
+  const editListing = async (id, payload)=>{
+    const res = await updateListing(id, payload)
+    const updated = normalizeListing(res.listing)
+    const withFavorite = { ...updated, favorite: savedSet.has(String(updated.id)) }
+    setListings(arr=> arr.map(l=> l.id===id? withFavorite : l))
+    return res.listing
+  }
+
   function ensureThread(id){
     setListings(arr=> arr.map(l=> l.id===id? l : l))
     return true
@@ -179,7 +187,7 @@ export function ListingsProvider({ children }){
   }
 
   return (
-    <ListingsContext.Provider value={{ listings, messagesByListing, getMessages, loadMessagesForListing, view, addChat, setSaved, savedSet, createListing, ensureThread, sendMessage, sendOffer, setOfferStatus, setStatus, remove, reload: loadListings }}>
+    <ListingsContext.Provider value={{ listings, messagesByListing, getMessages, loadMessagesForListing, view, addChat, setSaved, savedSet, createListing, editListing, ensureThread, sendMessage, sendOffer, setOfferStatus, setStatus, remove, reload: loadListings }}>
       {children}
     </ListingsContext.Provider>
   )

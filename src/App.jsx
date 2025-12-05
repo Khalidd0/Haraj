@@ -8,6 +8,7 @@ import SignUpPage from './pages/SignUpPage'
 import VerifyPage from './pages/VerifyPage'
 import ListingDetailPage from './pages/ListingDetailPage'
 import PostItemPage from './pages/PostItemPage'
+import EditListingPage from './pages/EditListingPage'
 import AddProductPage from './pages/AddProductPage'
 import MessagesPage from './pages/MessagesPage'
 import ProfilePage from './pages/ProfilePage'
@@ -28,6 +29,7 @@ function RootRoutes() {
       <Route path='/signup' element={<SignUpPage/>}/>
       <Route path='/verify' element={<VerifyPage/>}/>
       <Route path='/listing/:id' element={<ListingDetailPage/>}/>
+      <Route path='/listing/:id/edit' element={<ProtectedRoute><EditListingPage/></ProtectedRoute>}/>
       <Route path='/post' element={<ProtectedRoute><PostItemPage/></ProtectedRoute>}/>
       <Route path='/add' element={<ProtectedRoute><AddProductPage/></ProtectedRoute>}/>
       <Route path='/messages/*' element={<ProtectedRoute><MessagesPage/></ProtectedRoute>}/>
