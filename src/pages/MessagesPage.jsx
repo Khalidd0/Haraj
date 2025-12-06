@@ -7,15 +7,18 @@ import { AuthContext } from '../context/AuthContext'
 const filterMessagesForThread = (listing, msgs, meId, buyerId)=>{
   const sellerId = listing.seller?.id
   const isSeller = meId && String(sellerId) === String(meId)
+  const safeMsgs = (msgs || []).filter(Boolean)
   if (isSeller) {
-    return msgs.filter(m => {
+    return safeMsgs.filter(m => {
+      if (m.from == null) return false
       const fromSeller = String(m.from) === String(meId)
       const fromBuyer = buyerId && String(m.from) === String(buyerId)
       const toBuyer = buyerId && String(m.to) === String(buyerId)
       return m.from === 'system' || fromBuyer || (fromSeller && (!m.to || toBuyer))
     })
   }
-  return msgs.filter(m => {
+  return safeMsgs.filter(m => {
+    if (m.from == null) return false
     const fromBuyer = String(m.from) === String(meId)
     const fromSeller = String(m.from) === String(sellerId)
     const directedToUser = !m.to || String(m.to) === String(meId)
@@ -26,13 +29,13 @@ const filterMessagesForThread = (listing, msgs, meId, buyerId)=>{
 function buildThreads(listings, messagesByListing, userId, includeListingId){
   return listings.flatMap(l => {
     const isSeller = userId && String(l.seller?.id) === String(userId)
-    const listingMessages = messagesByListing[l.id] || []
+    const listingMessages = (messagesByListing[l.id] || []).filter(Boolean)
     if (!isSeller) {
       const filtered = filterMessagesForThread(l, listingMessages, userId, userId)
       const shouldInclude = filtered.length > 0 || (includeListingId && String(includeListingId) === String(l.id))
       return shouldInclude ? [{ ...l, threadId: String(l.id), listingId: l.id, participant: userId, messages: filtered }] : []
     }
-    const buyers = [...new Set(listingMessages.filter(m => String(m.from) !== String(userId) && m.from !== 'system').map(m => String(m.from)))]
+    const buyers = [...new Set(listingMessages.filter(m => m.from != null && String(m.from) !== String(userId) && m.from !== 'system').map(m => String(m.from)))]
     if (buyers.length === 0) return [{ ...l, threadId: `${l.id}:none`, listingId: l.id, participant: null, empty: true, messages: [] }]
     return buyers.map(buyerId => ({
       ...l,
@@ -45,7 +48,7 @@ function buildThreads(listings, messagesByListing, userId, includeListingId){
 }
 
 function ThreadItem({ l, onOpen, unread, meId }){
-  const visible = l.messages || []
+  const visible = (l.messages || []).filter(Boolean)
   const last = visible[visible.length-1]
   const lastText = last ? last.text : 'No messages yet'
 
@@ -56,7 +59,7 @@ function ThreadItem({ l, onOpen, unread, meId }){
   const isSellerMe = meId && String(sellerId) === String(meId)
 
   if (isSellerMe) {
-    const otherMsg = [...visible].reverse().find(m => m.from !== 'system' && String(m.from) !== String(meId))
+    const otherMsg = [...visible].reverse().find(m => m.from && m.from !== 'system' && String(m.from) !== String(meId))
     otherName = otherMsg?.fromName || 'Buyer'
   } else {
     otherName = sellerName
@@ -102,8 +105,8 @@ export default function MessagesPage(){
 
   if(!room) return <div>No conversations yet. Start by messaging a seller from a listing.</div>
 
-  const visibleMessages = room.messages || []
-  const roomHasOtherParty = visibleMessages.some(m=> String(m.from)!==String(user?.id))
+  const visibleMessages = (room.messages || []).filter(Boolean)
+  const roomHasOtherParty = visibleMessages.some(m=> m.from!=null && String(m.from)!==String(user?.id))
   const isSeller = user && room.seller?.id === user.id
 
   function onSend(text){
@@ -117,8 +120,8 @@ export default function MessagesPage(){
 
   function hasUnread(l){
     const seen = lastSeen[l.threadId] || 0
-    const visible = l.messages || []
-    return visible.some(m => String(m.from)!==String(user?.id) && new Date(m.at || Date.now()).getTime() > seen)
+    const visible = (l.messages || []).filter(Boolean)
+    return visible.some(m => m.from!=null && String(m.from)!==String(user?.id) && new Date(m.at || Date.now()).getTime() > seen)
   }
 
   const threadList = threads.map(l => ({ ...l, meId: user?.id })) // inject current user id for ThreadItem
@@ -142,7 +145,7 @@ export default function MessagesPage(){
 function ChatRoom({ room, onSend, meId, meName, sellerId, sellerName, isSeller, roomHasOtherParty }){
   const [text, setText] = useState('')
   const endRef = useRef(null)
-  const visibleMessages = room.messages || []
+  const visibleMessages = (room.messages || []).filter(Boolean)
   useEffect(()=>{ endRef.current?.scrollIntoView({behavior:'smooth'}) }, [visibleMessages.length])
 
   const canSendMessage = (!isSeller || roomHasOtherParty) && (!isSeller || !!room?.participant)
@@ -151,7 +154,7 @@ function ChatRoom({ room, onSend, meId, meName, sellerId, sellerName, isSeller, 
     if(!from) return 'Unknown'
     if(String(from)===String(meId)) return meName || 'You'
     if(String(from)===String(sellerId)) return sellerName || 'Seller'
-    const found = room.messages.find(m=> String(m.from)===String(from))
+    const found = (room.messages || []).find(m=> m && String(m.from)===String(from))
     return found?.fromName || 'Buyer'
   }
 
@@ -166,11 +169,12 @@ function ChatRoom({ room, onSend, meId, meName, sellerId, sellerName, isSeller, 
   return (
     <div className='h-[520px] grid grid-rows-[1fr_auto] card bg-transparent'>
       <div className='overflow-y-auto p-4 space-y-2'>
-        {visibleMessages.map(m => {
+        {visibleMessages.map((m, idx) => {
+          if(!m || m.from == null) return null
           const mine = meId && String(m.from)===String(meId)
           const fromLabel = m.fromName || nameFor(m.from)
           return (
-            <div key={m.id} className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow ${mine ? 'ml-auto bg-gray-900 text-white' : (m.from==='system' ? 'mx-auto bg-gray-200' : 'bg-white border')}`}>
+            <div key={m.id || idx} className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow ${mine ? 'ml-auto bg-gray-900 text-white' : (m.from==='system' ? 'mx-auto bg-gray-200' : 'bg-white border')}`}>
               <div className='text-[10px] text-gray-500 mb-0.5'>{fromLabel}</div>
               {m.text}
             </div>
