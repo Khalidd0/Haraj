@@ -9,17 +9,36 @@ export function AuthProvider({ children }){
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(()=> localStorage.getItem(LS_TOKEN) || '')
   const [loading, setLoading] = useState(false)
+  const [initializing, setInitializing] = useState(true)
 
   useEffect(() => {
-    if (token) {
-      setAuthToken(token)
-      fetchMe().then(res => setUser(res.user)).catch(() => {
-        setUser(null)
-        setToken('')
-        localStorage.removeItem(LS_TOKEN)
+    let active = true
+    const load = async () => {
+      if (!token) {
         setAuthToken(null)
-      })
+        if (active) {
+          setUser(null)
+          setInitializing(false)
+        }
+        return
+      }
+      setAuthToken(token)
+      try {
+        const res = await fetchMe()
+        if (active) setUser(res.user)
+      } catch {
+        if (active) {
+          setUser(null)
+          setToken('')
+          localStorage.removeItem(LS_TOKEN)
+          setAuthToken(null)
+        }
+      } finally {
+        if (active) setInitializing(false)
+      }
     }
+    load()
+    return () => { active = false }
   }, [token])
 
   const login = async ({ email, password }) => {
@@ -56,6 +75,6 @@ export function AuthProvider({ children }){
     setAuthToken(null)
   }
 
-  const value = { user, token, loading, login, logout, register, verify }
+  const value = { user, token, loading, initializing, login, logout, register, verify }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
