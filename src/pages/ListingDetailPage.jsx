@@ -124,7 +124,6 @@ export default function ListingDetailPage(){
           {!isAdmin && (
             <div className='flex gap-2'>
               <button onClick={messageSeller} className='btn btn-dark flex-1' disabled={isOwner}>Message Seller</button>
-              <button onClick={submitOffer} className='btn btn-outline' disabled={isOwner}>Send Offer</button>
             </div>
           )}
           {!isOwner && !isAdmin && (
