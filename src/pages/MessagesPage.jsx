@@ -179,7 +179,7 @@ function ChatRoom({ room, onSend, meId, meName, sellerId, sellerName, isSeller, 
   }
 
   return (
-    <div className='h-[520px] grid grid-rows-[1fr_auto] bg-gray-50'>
+    <div className='h-[520px] grid grid-rows-[1fr_auto] card bg-transparent'>
       <div className='overflow-y-auto p-4 space-y-2'>
         {visibleMessages.map(m => {
           const mine = meId && String(m.from)===String(meId)
@@ -194,7 +194,7 @@ function ChatRoom({ room, onSend, meId, meName, sellerId, sellerName, isSeller, 
         <div ref={endRef}/>
       </div>
       <div className='border-t bg-white p-3 space-y-2'>
-        <div className='flex gap-2'>
+            <div className='flex gap-2 bg-transparent'>
           <input
             value={text}
             onChange={e=>setText(e.target.value)}

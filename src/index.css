@@ -62,3 +62,15 @@ body{
 .dark .text-gray-700{
   color: #e5e7eb;
 }
+
+.dark .bg-gray-50{
+  background-color: #020617;
+}
+
+.dark .bg-white{
+  background-color: #020617;
+}
+
+.dark .bg-gray-200{
+  background-color: #020617;
+}

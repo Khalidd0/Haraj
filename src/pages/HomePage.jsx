@@ -58,7 +58,7 @@ export default function HomePage(){
     <div className='grid grid-cols-1 md:grid-cols-12 gap-6'>
       {/* sidebar */}
       <aside className='md:col-span-3'>
-        <div className='bg-white border rounded-lg p-4 space-y-3'>
+        <div className='card p-4 space-y-3'>
           <div>
             <label className='text-sm'>Search</label>
             <div className='mt-1'>
@@ -66,7 +66,7 @@ export default function HomePage(){
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder='calculator, chair…'
-                className='border rounded w-full px-3 py-2'
+                className='input'
               />
             </div>
           </div>
@@ -75,7 +75,7 @@ export default function HomePage(){
             <select
               value={cat}
               onChange={e => setCat(e.target.value)}
-              className='mt-1 border rounded w-full px-3 py-2'
+              className='mt-1 input'
             >
               <option value='all'>All</option>
               {categories.map(c => (
@@ -90,7 +90,7 @@ export default function HomePage(){
             <select
               value={sort}
               onChange={e => setSort(e.target.value)}
-              className='mt-1 border rounded w-full px-3 py-2'
+              className='mt-1 input'
             >
               <option value='new'>Newest</option>
               <option value='priceAsc'>Price ↑</option>
@@ -116,9 +116,9 @@ export default function HomePage(){
         {rules.length > 0 && (
           <div className='mb-4 space-y-2'>
             {rules.map(rule => (
-              <div key={rule.id || rule._id} className='bg-white border rounded px-3 py-2 text-sm'>
+              <div key={rule.id || rule._id} className='card px-3 py-2 text-sm'>
                 <div className='font-semibold'>{rule.title}</div>
-                <div className='text-xs text-gray-600 whitespace-pre-line'>{rule.body}</div>
+                <div className='text-xs whitespace-pre-line'>{rule.body}</div>
               </div>
             ))}
           </div>

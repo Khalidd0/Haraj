@@ -85,32 +85,32 @@ export default function EditListingPage(){
 
   return (
     <div className='max-w-3xl mx-auto'>
-      <form onSubmit={submit} className='bg-white border rounded-lg p-4 grid gap-3'>
+      <form onSubmit={submit} className='card p-4 grid gap-3'>
         <h2 className='text-xl font-semibold'>Edit Listing</h2>
         <div>
           <label className='text-sm'>Title</label>
-          <input value={form.title} onChange={set('title')} className='mt-1 border rounded w-full px-3 py-2' />
+          <input value={form.title} onChange={set('title')} className='mt-1 input' />
         </div>
         <div>
           <label className='text-sm'>Price (SAR)</label>
-          <input type='number' value={form.price} onChange={set('price')} className='mt-1 border rounded w-full px-3 py-2' />
+          <input type='number' value={form.price} onChange={set('price')} className='mt-1 input' />
         </div>
         <div className='grid sm:grid-cols-3 gap-3'>
           <div>
             <label className='text-sm'>Category</label>
-            <select value={form.categoryId} onChange={set('categoryId')} className='mt-1 border rounded w-full px-3 py-2'>
+            <select value={form.categoryId} onChange={set('categoryId')} className='mt-1 input'>
               {categories.map(c=> <option key={c.id} value={String(c.id)}>{c.name}</option>)}
             </select>
           </div>
           <div>
             <label className='text-sm'>Condition</label>
-            <select value={form.condition} onChange={set('condition')} className='mt-1 border rounded w-full px-3 py-2'>
+            <select value={form.condition} onChange={set('condition')} className='mt-1 input'>
               {['New','Like New','Very Good','Good','Acceptable'].map(v=> <option key={v} value={v}>{v}</option>)}
             </select>
           </div>
           <div>
             <label className='text-sm'>Pickup Zone</label>
-            <select value={form.zoneId} onChange={set('zoneId')} className='mt-1 border rounded w-full px-3 py-2'>
+            <select value={form.zoneId} onChange={set('zoneId')} className='mt-1 input'>
               {PICKUP_ZONES.map(z=> <option key={z.id} value={String(z.id)}>{z.name}</option>)}
             </select>
           </div>
@@ -120,7 +120,7 @@ export default function EditListingPage(){
               <input
                 value={form.zoneNote}
                 onChange={set('zoneNote')}
-                className='mt-1 border rounded w-full px-3 py-2'
+                className='mt-1 input'
                 placeholder='e.g. Building 838, Spokes Hub, etc.'
               />
             </div>
@@ -136,7 +136,7 @@ export default function EditListingPage(){
           </div>
           <div className='space-y-1'>
             {images.map((url, idx)=> (
-              <div key={idx} className='flex items-center justify-between bg-gray-50 border rounded px-2 py-1 text-sm'>
+              <div key={idx} className='flex items-center justify-between card px-2 py-1 text-sm'>
                 <span className='truncate max-w-[75%]' title={url}>{url}</span>
                 <button type='button' onClick={()=>removeImage(idx)} className='text-red-600 text-xs underline'>Remove</button>
               </div>
@@ -147,7 +147,7 @@ export default function EditListingPage(){
         </div>
         <div>
           <label className='text-sm'>Description</label>
-          <textarea rows='4' value={form.description} onChange={set('description')} className='mt-1 border rounded w-full px-3 py-2'/>
+          <textarea rows='4' value={form.description} onChange={set('description')} className='mt-1 input'/>
         </div>
         {error && <div className='text-sm text-red-600'>{error}</div>}
         <div className='flex items-center justify-between'>
