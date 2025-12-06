@@ -23,12 +23,15 @@ function normalizeListing(l) {
 }
 
 function normalizeMessage(m){
+  if (!m) return null
   const fromId = m.from?.toString?.() || m.from
+  // allow system messages without from id
+  if (!fromId && m.from !== 'system') return null
   const toId = m.to?.toString?.() || m.to
   return {
     ...m,
     id: m._id || m.id,
-    from: fromId,
+    from: fromId || m.from, // preserve 'system'
     to: toId,
     at: m.at || m.createdAt || new Date().toISOString()
   }
@@ -65,8 +68,9 @@ export function ListingsProvider({ children }){
       const listingId = payload.listingId || payload.listing?.id || payload.listingId
       if (!listingId) return
       const msg = normalizeMessage(payload)
+      if (!msg) return
       setMessagesByListing(map => {
-        const arr = map[listingId] || []
+        const arr = (map[listingId] || []).filter(Boolean)
         if (arr.some(m => String(m.id) === String(msg.id))) return map
         return { ...map, [listingId]: [...arr, msg] }
       })
@@ -177,7 +181,7 @@ export function ListingsProvider({ children }){
     if (!listingId) return []
     try{
       const res = await listMessages(listingId)
-      const msgs = Array.isArray(res.messages) ? res.messages.map(normalizeMessage) : []
+      const msgs = Array.isArray(res.messages) ? res.messages.map(normalizeMessage).filter(Boolean) : []
       setMessagesByListing(map => ({ ...map, [listingId]: msgs }))
       return msgs
     }catch(err){
@@ -187,7 +191,7 @@ export function ListingsProvider({ children }){
   }
 
   function getMessages(listingId){
-    return messagesByListing[listingId] || []
+    return (messagesByListing[listingId] || []).filter(Boolean)
   }
 
   async function sendMessage(id, from, text, to){
@@ -195,12 +199,13 @@ export function ListingsProvider({ children }){
     const sender = from || user.id
     const optimisticId = `temp-${Date.now()}`
     const optimistic = { id: optimisticId, from: sender, to, fromName: user.name, text, type: 'message', at: new Date().toISOString(), temp: true }
-    setMessagesByListing(map => ({ ...map, [id]: [...(map[id] || []), optimistic] }))
+    setMessagesByListing(map => ({ ...map, [id]: [...(map[id] || []).filter(Boolean), optimistic] }))
     try{
       const res = await sendListingMessage(id, text, to)
       const saved = normalizeMessage(res.message)
+      if (!saved) throw new Error('Message missing sender')
       setMessagesByListing(map => {
-        const arr = map[id] || []
+        const arr = (map[id] || []).filter(Boolean)
         const filtered = arr.filter(m => m.id !== optimisticId)
         if (filtered.some(m => String(m.id) === String(saved.id))) {
           return { ...map, [id]: filtered }
