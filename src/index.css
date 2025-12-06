@@ -21,9 +21,10 @@
   --text: #e5e7eb;
   --card: #020617;
   --border: #1f2937;
-  --brand: #22c55e;
-  --brand-2: #16a34a;
-  --accent: #f97316;
+  /* keep same brand colors as light theme for consistency */
+  --brand: #0E6B64;
+  --brand-2: #0A4D48;
+  --accent: #F3B12B;
 }
 
 body{
