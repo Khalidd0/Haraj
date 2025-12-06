@@ -94,21 +94,6 @@ export default function MessagesPage(){
     }
   }, [room?.listingId, room?.id])
 
-  // Poll all visible threads so new messages appear automatically
-  useEffect(() => {
-    if (!user?.id) return
-    const listingIds = Array.from(
-      new Set(
-        threads.map(t => t.listingId || t.id).filter(Boolean)
-      )
-    )
-    if (!listingIds.length) return
-    const interval = setInterval(() => {
-      listingIds.forEach(id => loadMessagesForListing(id))
-    }, 1500)
-    return () => clearInterval(interval)
-  }, [user?.id, threads, loadMessagesForListing])
-
   useEffect(()=>{
     if(room?.threadId){
       setLastSeen(map => ({ ...map, [room.threadId]: Date.now() }))

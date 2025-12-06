@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { listListings, createListing as apiCreate, incrementMetric, sendListingMessage, createOffer, updateOffer, updateListing, deleteListing, listMessages, getSaved, saveListing, unsaveListing } from '../api/listings'
 import { getApiBase } from '../api/client'
+import { connectSocket } from '../api/socket'
 import { AuthContext } from './AuthContext'
 
 export const ListingsContext = createContext()
@@ -45,9 +46,67 @@ export function ListingsProvider({ children }){
   const [listings, setListings] = useState([])
   const [messagesByListing, setMessagesByListing] = useState({})
   const [savedSet, setSavedSet] = useState(new Set())
+  const socketRef = useRef(null)
 
   useEffect(() => { loadListings() }, [])
   useEffect(() => { if(user) loadSaved(); else setSavedSet(new Set()) }, [user?.id])
+
+  useEffect(() => {
+    if (!token) {
+      if (socketRef.current) {
+        socketRef.current.disconnect()
+        socketRef.current = null
+      }
+      return
+    }
+    const socket = connectSocket(token)
+    socketRef.current = socket
+    const handleMessage = (payload) => {
+      const listingId = payload.listingId || payload.listing?.id || payload.listingId
+      if (!listingId) return
+      const msg = normalizeMessage(payload)
+      setMessagesByListing(map => {
+        const arr = map[listingId] || []
+        if (arr.some(m => String(m.id) === String(msg.id))) return map
+        return { ...map, [listingId]: [...arr, msg] }
+      })
+      setListings(arr => arr.map(l => String(l.id) === String(listingId) ? { ...l, metrics: { ...l.metrics, chats: (l.metrics?.chats || 0) + 1 } } : l))
+    }
+    const handleOfferNew = (payload) => {
+      const listingId = payload.listingId
+      if (!listingId || !payload.offer) return
+      setListings(arr => arr.map(l => {
+        if (String(l.id) !== String(listingId)) return l
+        const existing = Array.isArray(l.offers) ? l.offers : []
+        const idx = existing.findIndex(o => String(o.id || o._id) === String(payload.offer.id || payload.offer._id))
+        const updatedOffers = idx >= 0 ? existing.map((o, i) => i === idx ? payload.offer : o) : [...existing, payload.offer]
+        return { ...l, offers: updatedOffers, metrics: { ...l.metrics, chats: (l.metrics?.chats || 0) + 1 } }
+      }))
+    }
+    const handleOfferUpdated = (payload) => {
+      const listingId = payload.listingId
+      if (!listingId || !payload.offer) return
+      setListings(arr => arr.map(l => {
+        if (String(l.id) !== String(listingId)) return l
+        const existing = Array.isArray(l.offers) ? l.offers : []
+        const updatedOffers = existing.map(o => String(o.id || o._id) === String(payload.offer.id || payload.offer._id) ? payload.offer : o)
+        return { ...l, offers: updatedOffers }
+      }))
+    }
+    socket.on('message:new', handleMessage)
+    socket.on('offer:new', handleOfferNew)
+    socket.on('offer:updated', handleOfferUpdated)
+    socket.on('connect_error', (err) => {
+      console.warn('socket error', err.message)
+    })
+    return () => {
+      socket.off('message:new', handleMessage)
+      socket.off('offer:new', handleOfferNew)
+      socket.off('offer:updated', handleOfferUpdated)
+      socket.disconnect()
+      socketRef.current = null
+    }
+  }, [token])
 
   async function loadListings() {
     try{
@@ -134,13 +193,26 @@ export function ListingsProvider({ children }){
   async function sendMessage(id, from, text, to){
     if (!user) throw new Error('Login required')
     const sender = from || user.id
-    const optimistic = { id: Date.now(), from: sender, to, fromName: user.name, text, type: 'message', at: new Date().toISOString() }
+    const optimisticId = `temp-${Date.now()}`
+    const optimistic = { id: optimisticId, from: sender, to, fromName: user.name, text, type: 'message', at: new Date().toISOString(), temp: true }
     setMessagesByListing(map => ({ ...map, [id]: [...(map[id] || []), optimistic] }))
-    addChat(id)
     try{
-      await sendListingMessage(id, text, to)
+      const res = await sendListingMessage(id, text, to)
+      const saved = normalizeMessage(res.message)
+      setMessagesByListing(map => {
+        const arr = map[id] || []
+        const filtered = arr.filter(m => m.id !== optimisticId)
+        if (filtered.some(m => String(m.id) === String(saved.id))) {
+          return { ...map, [id]: filtered }
+        }
+        return { ...map, [id]: [...filtered, saved] }
+      })
     }catch(err){
-      console.warn('send message failed', err.message)
+      setMessagesByListing(map => {
+        const arr = map[id] || []
+        return { ...map, [id]: arr.filter(m => m.id !== optimisticId) }
+      })
+      throw err
     }
   }
 
@@ -149,7 +221,6 @@ export function ListingsProvider({ children }){
     const by = from || user.id
     const offer = { id: Date.now(), by, byName:user.name, price, status:'Pending', at:new Date().toISOString() }
     setListings(arr=> arr.map(l=> l.id===id? {...l, offers:[...l.offers, offer]}:l))
-    addChat(id)
     try{
       const res = await createOffer(id, price)
       setListings(arr=> arr.map(l=> l.id===id? {...l, offers: res.offers}:l))

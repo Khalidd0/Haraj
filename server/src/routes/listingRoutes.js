@@ -6,6 +6,7 @@ import { authenticate, requireVerified } from '../middleware/auth.js'
 import { validateRequest } from '../middleware/validateRequest.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import Message from '../models/Message.js'
+import { emitToUsers } from '../socket.js'
 
 const router = Router()
 
@@ -158,7 +159,7 @@ router.post(
       return res.status(400).json({ message: 'Recipient required for seller messages' })
     }
     const to = isSeller ? req.body.to : listing.seller.id
-    await Message.create({
+    const message = await Message.create({
       listingId: listing.id,
       from: req.user.id,
       to,
@@ -168,7 +169,19 @@ router.post(
     })
     listing.metrics.chats = (listing.metrics.chats || 0) + 1
     await listing.save()
-    res.status(201).json({ ok: true })
+    const payload = {
+      id: message.id,
+      listingId: listing.id,
+      from: message.from,
+      to: message.to,
+      fromName: message.fromName,
+      text: message.text,
+      type: message.type,
+      at: message.at || message.createdAt
+    }
+    const io = req.app.get('io')
+    emitToUsers(io, [req.user.id, to], 'message:new', payload)
+    res.status(201).json({ message: payload })
   })
 )
 
@@ -208,6 +221,10 @@ router.post(
     listing.offers.push(offer)
     listing.metrics.chats = (listing.metrics.chats || 0) + 1
     await listing.save()
+    const latestDoc = listing.offers[listing.offers.length - 1]
+    const latest = latestDoc?.toObject ? latestDoc.toObject() : latestDoc
+    const io = req.app.get('io')
+    emitToUsers(io, [req.user.id, listing.seller.id], 'offer:new', { listingId: listing.id, offer: latest })
     res.status(201).json({ offers: listing.offers })
   })
 )
@@ -228,6 +245,9 @@ router.patch(
     if (!offer) return res.status(404).json({ message: 'Offer not found' })
     offer.status = req.body.status
     await listing.save()
+    const plainOffer = offer?.toObject ? offer.toObject() : offer
+    const io = req.app.get('io')
+    emitToUsers(io, [req.user.id, offer.by], 'offer:updated', { listingId: listing.id, offer: plainOffer })
     res.json({ offers: listing.offers })
   })
 )

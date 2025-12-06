@@ -4,6 +4,8 @@ import app from './src/app.js'
 import { connectDB } from './src/config/db.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import http from 'http'
+import { setupSocket } from './src/socket.js'
 
 // Load environment from server/.env when running from repo root
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -19,7 +21,10 @@ async function start() {
       fs.mkdirSync(uploadsDir)
     }
     await connectDB(MONGODB_URI)
-    app.listen(PORT, () => {
+    const server = http.createServer(app)
+    const io = setupSocket(server)
+    app.set('io', io)
+    server.listen(PORT, () => {
       console.log(`API server running on port ${PORT}`)
     })
   } catch (err) {
