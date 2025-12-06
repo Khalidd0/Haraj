@@ -79,15 +79,20 @@ export default function MessagesPage(){
     }
   }, [room?.listingId, room?.id])
 
-  // Short polling to keep messages fresh while viewing a thread
+  // Poll all visible threads so new messages appear automatically
   useEffect(() => {
-    if (!room?.listingId && !room?.id) return
-    const listingId = room.listingId || room.id
+    if (!user?.id) return
+    const listingIds = Array.from(
+      new Set(
+        threads.map(t => t.listingId || t.id).filter(Boolean)
+      )
+    )
+    if (!listingIds.length) return
     const interval = setInterval(() => {
-      loadMessagesForListing(listingId)
-    }, 2000)
+      listingIds.forEach(id => loadMessagesForListing(id))
+    }, 1500)
     return () => clearInterval(interval)
-  }, [room?.listingId, room?.id, loadMessagesForListing])
+  }, [user?.id, threads, loadMessagesForListing])
 
   useEffect(()=>{
     if(room?.threadId){
