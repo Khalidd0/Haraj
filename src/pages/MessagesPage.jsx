@@ -170,6 +170,14 @@ function ChatRoom({ room, onSend, meId, meName, sellerId, sellerName, isSeller, 
     return found?.fromName || 'Buyer'
   }
 
+  const handleSend = () => {
+    if (!canSendMessage) return
+    const trimmed = text.trim()
+    if (!trimmed) return
+    onSend(trimmed)
+    setText('')
+  }
+
   return (
     <div className='h-[520px] grid grid-rows-[1fr_auto] bg-gray-50'>
       <div className='overflow-y-auto p-4 space-y-2'>
@@ -187,8 +195,20 @@ function ChatRoom({ room, onSend, meId, meName, sellerId, sellerName, isSeller, 
       </div>
       <div className='border-t bg-white p-3 space-y-2'>
         <div className='flex gap-2'>
-          <input value={text} onChange={e=>setText(e.target.value)} onKeyDown={e=> e.key==='Enter' && canSendMessage && onSend(text) && setText('')} className='input flex-1' placeholder={canSendMessage ? 'Type a message (=500 chars)' : 'Waiting for buyer to contact you'} disabled={!canSendMessage}/>
-          <button className='btn btn-dark' onClick={()=>{canSendMessage && onSend(text); setText('')}} disabled={!canSendMessage}>Send</button>
+          <input
+            value={text}
+            onChange={e=>setText(e.target.value)}
+            onKeyDown={e=> {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleSend()
+              }
+            }}
+            className='input flex-1'
+            placeholder={canSendMessage ? 'Type a message (=500 chars)' : 'Waiting for buyer to contact you'}
+            disabled={!canSendMessage}
+          />
+          <button className='btn btn-dark' onClick={handleSend} disabled={!canSendMessage}>Send</button>
         </div>
       </div>
     </div>
