@@ -1,12 +1,13 @@
 import { useContext, useState } from 'react'
 import { ListingsContext } from '../context/ListingsContext'
-import { CATEGORIES } from '../data/categories'
+import { CategoryContext } from '../context/CategoryContext'
 import { PICKUP_ZONES } from '../data/pickupZones'
 import { useNavigate } from 'react-router-dom'
 import { uploadImage } from '../api/uploads'
 
 export default function AddProductPage(){
   const { createListing } = useContext(ListingsContext)
+  const { categories } = useContext(CategoryContext)
   const nav = useNavigate()
   const [form, setForm] = useState({ title:'', description:'', price:'', categoryId:'1', condition:'Like New', zoneId:'1' })
   const [images, setImages] = useState([])
@@ -59,8 +60,8 @@ export default function AddProductPage(){
           <textarea className='input' rows='4' value={form.description} onChange={set('description')} />
           <label className='text-sm'>Enter the Product Price</label>
           <input className='input' type='number' value={form.price} onChange={set('price')}/>
-          <div className='grid sm:grid-cols-3 gap-3'>
-            <div><label className='text-sm'>Category</label><select className='input' value={form.categoryId} onChange={set('categoryId')}>{CATEGORIES.map(c=> <option key={c.id} value={String(c.id)}>{c.name}</option>)}</select></div>
+            <div className='grid sm:grid-cols-3 gap-3'>
+            <div><label className='text-sm'>Category</label><select className='input' value={form.categoryId} onChange={set('categoryId')}>{categories.map(c=> <option key={c.id} value={String(c.id)}>{c.name}</option>)}</select></div>
             <div><label className='text-sm'>Condition</label><select className='input' value={form.condition} onChange={set('condition')}>{['New','Like New','Very Good','Good','Acceptable'].map(v=> <option key={v} value={v}>{v}</option>)}</select></div>
             <div><label className='text-sm'>Pickup Zone</label><select className='input' value={form.zoneId} onChange={set('zoneId')}>{PICKUP_ZONES.map(z=> <option key={z.id} value={String(z.id)}>{z.name}</option>)}</select></div>
           </div>

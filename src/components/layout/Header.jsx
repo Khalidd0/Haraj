@@ -11,10 +11,20 @@ export default function Header(){
         <Link to="/" className="text-2xl font-bold">Haraj Petroly</Link>
         <SearchBar />
         <div className="flex items-center gap-4 ml-auto text-sm">
-          <Link to="/" className="hover:underline">Home</Link>
-          <Link to="/messages" className="hover:underline">Messages</Link>
-          <Link to="/profile" className="hover:underline">Profile</Link>
-          <Link to="/saved" className="hover:underline">Saved</Link>
+          {user?.role === 'admin' ? (
+            <>
+              <Link to="/admin" className="hover:underline font-semibold">Admin</Link>
+              <Link to="/" className="hover:underline">Marketplace</Link>
+              <Link to="/profile" className="hover:underline">Profile</Link>
+            </>
+          ) : (
+            <>
+              <Link to="/" className="hover:underline">Home</Link>
+              {user && <Link to="/messages" className="hover:underline">Messages</Link>}
+              {user && <Link to="/profile" className="hover:underline">Profile</Link>}
+              {user && <Link to="/saved" className="hover:underline">Saved</Link>}
+            </>
+          )}
           {user ? (
             <button onClick={logout} className="hover:underline">Logout</button>
           ) : (

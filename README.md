@@ -2,11 +2,62 @@
 
 KFUPM-only marketplace for safe on-campus buying/selling.
 
+## Quick Start (Local Development)
+
+### 1. Prerequisites
+- Node.js 18+
+- npm
+- A MongoDB instance (Atlas or local)
+
+### 2. Install dependencies
+From the project root:
+```bash
+npm install
+```
+
+### 3. Configure the API
+1. Copy the example env file and edit it:
+   ```bash
+   cd server
+   # if .env does not exist yet
+   cp .env.example .env   # or create .env manually
+   ```
+2. In `server/.env`, set at least:
+   ```env
+   MONGODB_URI="your-mongodb-connection-string"
+   JWT_SECRET="some-long-random-secret"
+   PORT=5000
+   ```
+
+### 4. Run the backend
+From the project root:
+```bash
+npm run server
+```
+The API will be available at `http://localhost:5000/api`.
+
+### 5. Run the frontend
+In another terminal, from the project root:
+```bash
+npm run dev
+```
+By default Vite serves the app on `http://localhost:5173`.
+
+### 6. Create an admin account (optional)
+1. In the UI, sign up and verify a normal user.
+2. In MongoDB, open the `users` collection and update that document:
+   ```js
+   db.users.updateOne(
+     { email: "your-admin@kfupm.edu.sa" },
+     { $set: { role: "admin", verified: true, status: "active" } }
+   )
+   ```
+3. Log in with that email/password and open `/admin` to access the admin dashboard.
+
 ## Front-End (React + Vite)
 - React Router + TailwindCSS
-- Run locally:
+- Local dev:
   ```bash
-  npm install
   npm run dev
   ```
 

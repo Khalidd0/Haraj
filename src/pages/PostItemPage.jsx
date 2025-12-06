@@ -1,12 +1,13 @@
 import { useContext, useState } from 'react'
 import { ListingsContext } from '../context/ListingsContext'
-import { CATEGORIES } from '../data/categories'
+import { CategoryContext } from '../context/CategoryContext'
 import { PICKUP_ZONES } from '../data/pickupZones'
 import { useNavigate } from 'react-router-dom'
 import { uploadImage } from '../api/uploads'
 
 export default function PostItemPage(){
   const { createListing } = useContext(ListingsContext)
+  const { categories } = useContext(CategoryContext)
   const nav = useNavigate()
   const [form, setForm] = useState({ title:'', price:'', categoryId:'1', condition:'Like New', zoneId:'1', description:'' })
   const [images, setImages] = useState([])
@@ -65,7 +66,7 @@ export default function PostItemPage(){
           <div>
             <label className='text-sm'>Category</label>
             <select value={form.categoryId} onChange={set('categoryId')} className='mt-1 border rounded w-full px-3 py-2'>
-              {CATEGORIES.map(c=> <option key={c.id} value={String(c.id)}>{c.name}</option>)}
+              {categories.map(c=> <option key={c.id} value={String(c.id)}>{c.name}</option>)}
             </select>
           </div>
           <div>

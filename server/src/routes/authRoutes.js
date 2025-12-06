@@ -17,7 +17,14 @@ function signToken(userId, role = 'user') {
 }
 
 function publicUser(user) {
-  return { id: user.id, name: user.name, email: user.email, verified: user.verified, role: user.role }
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    verified: user.verified,
+    role: user.role,
+    status: user.status
+  }
 }
 
 router.post(
@@ -54,6 +61,9 @@ router.post(
     const ok = await bcrypt.compare(password, user.passwordHash)
     if (!ok) {
       return res.status(401).json({ message: 'Invalid credentials' })
+    }
+    if (user.status === 'suspended') {
+      return res.status(403).json({ message: 'Account is suspended' })
     }
     if (!user.verified) {
       return res.status(403).json({ message: 'Please verify your email before logging in' })

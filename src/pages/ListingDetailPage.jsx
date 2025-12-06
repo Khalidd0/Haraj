@@ -4,6 +4,7 @@ import { ListingsContext } from '../context/ListingsContext'
 import { AuthContext } from '../context/AuthContext'
 import { PICKUP_ZONES } from '../data/pickupZones'
 import { money } from '../utils/formatters'
+import { createReport } from '../api/reports'
 
 export default function ListingDetailPage(){
   const { listings, view, sendOffer } = useContext(ListingsContext)
@@ -13,18 +14,46 @@ export default function ListingDetailPage(){
   const item = listings.find(l => String(l.id) === String(id))
   const [activeIdx, setActiveIdx] = useState(0)
   const [offer, setOffer] = useState(item? item.price : 0)
+  const [showReport, setShowReport] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportMsg, setReportMsg] = useState('')
+  const [reportError, setReportError] = useState('')
   useEffect(()=>{ if(item) view(item.id) }, [id])
   useEffect(()=>{ setActiveIdx(0); if(item) setOffer(item.price) }, [item?.id])
   if(!item) return <p>Listing not found.</p>
   const isOwner = user && item.seller?.id === user.id
+  const isAdmin = user?.role === 'admin'
 
   function messageSeller(){ nav('/messages/'+item.id) }
   async function submitOffer(){
     try{
       if(!user) throw new Error('Login to send offers')
       if(isOwner) throw new Error('You cannot send offers to your own listing')
+      if(isAdmin) throw new Error('Admin accounts cannot send offers')
       await sendOffer(item.id, user.id, Number(offer))
     }catch(err){ alert(err.message) }
+  }
+
+  async function submitReport(e){
+    e.preventDefault()
+    if (!user) {
+      setReportError('Login required to report')
+      return
+    }
+    if (!reportReason.trim()) {
+      setReportError('Please describe the issue')
+      return
+    }
+    try{
+      setReportError('')
+      setReportMsg('')
+      await createReport({ type: 'listing', targetId: String(item.id), reason: reportReason.trim() })
+      setReportMsg('Report submitted to admins. Thank you.')
+      setReportReason('')
+      setShowReport(false)
+    }catch(err){
+      setReportError(err.message || 'Failed to submit report')
+    }
   }
 
   return (
@@ -83,11 +112,38 @@ export default function ListingDetailPage(){
             <label className='text-xs'>Offer Price (SAR)</label>
             <input type='number' value={offer} onChange={e=>setOffer(Number(e.target.value))} className='input mt-1' />
           </div>
-          <div className='flex gap-2'>
-            <button onClick={messageSeller} className='btn btn-dark flex-1' disabled={isOwner}>Message Seller</button>
-            <button onClick={submitOffer} className='btn btn-outline' disabled={isOwner}>Send Offer</button>
-          </div>
-          </div>
+          {!isAdmin && (
+            <div className='flex gap-2'>
+              <button onClick={messageSeller} className='btn btn-dark flex-1' disabled={isOwner}>Message Seller</button>
+              <button onClick={submitOffer} className='btn btn-outline' disabled={isOwner}>Send Offer</button>
+            </div>
+          )}
+          {!isOwner && !isAdmin && (
+            <div className='mt-3 space-y-2 text-xs'>
+              <button
+                type='button'
+                className='underline text-red-600'
+                onClick={() => { setShowReport(v => !v); setReportError(''); setReportMsg('') }}
+              >
+                Report this listing
+              </button>
+              {showReport && (
+                <form onSubmit={submitReport} className='space-y-2'>
+                  <textarea
+                    className='input text-xs'
+                    rows={3}
+                    placeholder='Describe what is wrong with this listing (fake item, spam, etc.)'
+                    value={reportReason}
+                    onChange={e => setReportReason(e.target.value)}
+                  />
+                  {reportError && <div className='text-red-600'>{reportError}</div>}
+                  {reportMsg && <div className='text-green-700'>{reportMsg}</div>}
+                  <button className='btn btn-outline btn-sm'>Send report</button>
+                </form>
+              )}
+            </div>
+          )}
+        </div>
       </aside>
     </div>
   )

@@ -1,9 +1,24 @@
-import { Link } from 'react-router-dom';
-import { money } from '../../utils/formatters';
-import { CATEGORIES } from '../../data/categories';
+import { Link } from 'react-router-dom'
+import { useContext } from 'react'
+import { money } from '../../utils/formatters'
+import { CategoryContext } from '../../context/CategoryContext'
+import { AuthContext } from '../../context/AuthContext'
+import { ListingsContext } from '../../context/ListingsContext'
 
 export default function ListingCard({ item, onSave }){
-  const status = item.status && item.status !== 'active' ? item.status : null;
+  const status = item.status && item.status !== 'active' ? item.status : null
+  const { categories } = useContext(CategoryContext)
+  const { user } = useContext(AuthContext)
+  const { remove } = useContext(ListingsContext)
+  const categoryName = categories.find(c => c.id === item.categoryId)?.name
+  const isAdmin = user?.role === 'admin'
+
+  const handleDelete = () => {
+    if (!isAdmin) return
+    if (!window.confirm('Delete this listing?')) return
+    remove(item.id)
+  }
+
   return (
     <div className="card overflow-hidden">
       <Link to={`/listing/${item.id}`}>
@@ -15,15 +30,30 @@ export default function ListingCard({ item, onSave }){
       <div className="p-3 space-y-1">
         <div className="flex items-center justify-between">
           <Link to={`/listing/${item.id}`} className="font-medium hover:underline line-clamp-1">{item.title}</Link>
-          <span className="text-xs bg-[var(--brand)] text-white rounded px-2 py-0.5">{CATEGORIES.find(c=>c.id===item.categoryId)?.name}</span>
+          {categoryName && (
+            <span className="text-xs bg-[var(--brand)] text-white rounded px-2 py-0.5">
+              {categoryName}
+            </span>
+          )}
         </div>
         <div className="text-sm font-semibold">{money(item.price)}</div>
         <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>
-        <div className="flex justify-between pt-1">
-          <button onClick={()=>onSave(item.id)} className="text-xs underline">{item.favorite ? 'Unsave' : 'Save'}</button>
-          <Link to={`/listing/${item.id}`} className="text-xs underline">View details</Link>
+        <div className="flex justify-between items-center pt-1 text-xs">
+          <div className="flex gap-2">
+            {!isAdmin && (
+              <button onClick={()=>onSave(item.id)} className="underline">
+                {item.favorite ? 'Unsave' : 'Save'}
+              </button>
+            )}
+            {isAdmin && (
+              <button onClick={handleDelete} className="underline text-red-600">
+                Delete
+              </button>
+            )}
+          </div>
+          <Link to={`/listing/${item.id}`} className="underline">View details</Link>
         </div>
       </div>
     </div>
-  );
+  )
 }

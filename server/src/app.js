@@ -8,6 +8,9 @@ import reportRoutes from './routes/reportRoutes.js'
 import healthRoutes from './routes/healthRoutes.js'
 import uploadRoutes, { serveRouter as uploadServeRoutes } from './routes/uploadRoutes.js'
 import savedRoutes from './routes/savedRoutes.js'
+import categoryRoutes from './routes/categoryRoutes.js'
+import ruleRoutes from './routes/ruleRoutes.js'
+import userRoutes from './routes/userRoutes.js'
 import { errorHandler, notFound } from './middleware/errorHandler.js'
 
 const app = express()
@@ -22,6 +25,9 @@ app.use('/api/listings', listingRoutes)
 app.use('/api/reports', reportRoutes)
 app.use('/api/uploads', uploadRoutes)
 app.use('/api/saved', savedRoutes)
+app.use('/api/categories', categoryRoutes)
+app.use('/api/rules', ruleRoutes)
+app.use('/api/users', userRoutes)
 app.use('/uploads', uploadServeRoutes)
 
 app.use(notFound)

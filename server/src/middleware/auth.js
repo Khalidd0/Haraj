@@ -18,7 +18,17 @@ export async function authenticate(req, res, next) {
     if (!user) {
       return unauthorized(res, 'User not found')
     }
-    req.user = { id: user.id, email: user.email, name: user.name, role: user.role, verified: user.verified }
+    if (user.status === 'suspended') {
+      return unauthorized(res, 'Account suspended')
+    }
+    req.user = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      verified: user.verified,
+      status: user.status
+    }
     next()
   } catch (err) {
     return unauthorized(res, 'Invalid or expired token')

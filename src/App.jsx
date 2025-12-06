@@ -12,19 +12,20 @@ import EditListingPage from './pages/EditListingPage'
 import AddProductPage from './pages/AddProductPage'
 import MessagesPage from './pages/MessagesPage'
 import ProfilePage from './pages/ProfilePage'
-import AdminPage from './pages/AdminPage'
+import AdminDashboard from './pages/AdminDashboard'
 import SavedPage from './pages/SavedPage'
 import NotFound from './pages/NotFound'
 import { ListingsProvider } from './context/ListingsContext'
 import { AuthProvider, AuthContext } from './context/AuthContext'
 import { SearchProvider } from './context/SearchContext'
+import { CategoryProvider } from './context/CategoryContext'
 import ProtectedRoute from './routes/ProtectedRoute'
 
 function RootRoutes() {
   const { user } = useContext(AuthContext)
   return (
     <Routes>
-      <Route path='/' element={user? <HomePage/> : <LandingPage/>}/>
+      <Route path='/' element={user ? <HomePage/> : <LandingPage/>}/>
       <Route path='/login' element={<LoginPage/>}/>
       <Route path='/signup' element={<SignUpPage/>}/>
       <Route path='/verify' element={<VerifyPage/>}/>
@@ -35,7 +36,7 @@ function RootRoutes() {
       <Route path='/messages/*' element={<ProtectedRoute><MessagesPage/></ProtectedRoute>}/>
       <Route path='/profile' element={<ProtectedRoute><ProfilePage/></ProtectedRoute>}/>
       <Route path='/saved' element={<ProtectedRoute><SavedPage/></ProtectedRoute>}/>
-      <Route path='/admin' element={<ProtectedRoute><AdminPage/></ProtectedRoute>}/>
+      <Route path='/admin' element={<ProtectedRoute><AdminDashboard/></ProtectedRoute>}/>
       <Route path='*' element={<NotFound/>}/>
     </Routes>
   )
@@ -46,11 +47,13 @@ export default function App() {
     <Router>
       <AuthProvider>
         <SearchProvider>
-          <ListingsProvider>
-            <AppShell>
-              <RootRoutes/>
-            </AppShell>
-          </ListingsProvider>
+          <CategoryProvider>
+            <ListingsProvider>
+              <AppShell>
+                <RootRoutes/>
+              </AppShell>
+            </ListingsProvider>
+          </CategoryProvider>
         </SearchProvider>
       </AuthProvider>
     </Router>

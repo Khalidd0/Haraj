@@ -28,6 +28,7 @@ export function AuthProvider({ children }){
     setToken(res.token)
     localStorage.setItem(LS_TOKEN, res.token)
     setAuthToken(res.token)
+    return res.user
   }
 
   const register = async ({ name, email, password }) => {

@@ -1,12 +1,13 @@
 import { useContext, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ListingsContext } from '../context/ListingsContext'
-import { CATEGORIES } from '../data/categories'
+import { CategoryContext } from '../context/CategoryContext'
 import { PICKUP_ZONES } from '../data/pickupZones'
 import { uploadImage } from '../api/uploads'
 
 export default function EditListingPage(){
   const { listings, editListing } = useContext(ListingsContext)
+  const { categories } = useContext(CategoryContext)
   const { id } = useParams()
   const nav = useNavigate()
 
@@ -95,7 +96,7 @@ export default function EditListingPage(){
           <div>
             <label className='text-sm'>Category</label>
             <select value={form.categoryId} onChange={set('categoryId')} className='mt-1 border rounded w-full px-3 py-2'>
-              {CATEGORIES.map(c=> <option key={c.id} value={String(c.id)}>{c.name}</option>)}
+              {categories.map(c=> <option key={c.id} value={String(c.id)}>{c.name}</option>)}
             </select>
           </div>
           <div>

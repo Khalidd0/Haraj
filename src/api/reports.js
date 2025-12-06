@@ -11,3 +11,7 @@ export function listReports() {
 export function deleteReport(id) {
   return apiFetch(`/reports/${id}`, { method: 'DELETE' })
 }
+
+export function actOnReport(id, action) {
+  return apiFetch(`/reports/${id}/actions`, { method: 'POST', body: { action } })
+}

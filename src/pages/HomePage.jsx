@@ -1,14 +1,24 @@
-import { useContext, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ListingsContext } from '../context/ListingsContext'
 import { SearchContext } from '../context/SearchContext'
 import ListingCard from '../components/ui/ListingCard'
 import PaginationBar from '../components/ui/PaginationBar'
-import { CATEGORIES } from '../data/categories'
+import { CategoryContext } from '../context/CategoryContext'
+import { listPublicRules } from '../api/rules'
 
 export default function HomePage(){
   const { listings, setSaved } = useContext(ListingsContext)
-    const { term } = useContext(SearchContext)
+  const { term } = useContext(SearchContext)
+  const { categories } = useContext(CategoryContext)
+  const [rules, setRules] = useState([])
+  const [rulesError, setRulesError] = useState('')
+
+  useEffect(() => {
+    listPublicRules()
+      .then(res => setRules(res.rules || []))
+      .catch(err => setRulesError(err.message || 'Failed to load announcements'))
+  }, [])
   const [search, setSearch] = useState('')
   const [cat, setCat] = useState('all')
   const [sort, setSort] = useState('new')
@@ -68,7 +78,7 @@ export default function HomePage(){
               className='mt-1 border rounded w-full px-3 py-2'
             >
               <option value='all'>All</option>
-              {CATEGORIES.map(c => (
+              {categories.map(c => (
                 <option key={c.id} value={String(c.id)}>
                   {c.name}
                 </option>
@@ -101,6 +111,18 @@ export default function HomePage(){
             Post Item
           </Link>
         </div>
+
+        {rulesError && <div className='text-sm text-red-600 mb-2'>{rulesError}</div>}
+        {rules.length > 0 && (
+          <div className='mb-4 space-y-2'>
+            {rules.map(rule => (
+              <div key={rule.id || rule._id} className='bg-white border rounded px-3 py-2 text-sm'>
+                <div className='font-semibold'>{rule.title}</div>
+                <div className='text-xs text-gray-600 whitespace-pre-line'>{rule.body}</div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className='grid sm:grid-cols-2 lg:grid-cols-3 gap-4'>
         {filtered.map(l => <ListingCard key={l.id} item={l} onSave={(id)=> setSaved(id, !l.favorite)} />)}
