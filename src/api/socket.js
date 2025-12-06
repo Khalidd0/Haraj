@@ -11,8 +11,11 @@ export function connectSocket(token) {
     socket = null
   }
   socket = io(base, {
+    path: '/socket.io',
+    transports: ['websocket'], // avoid polling 404s on some hosts
     auth: { token },
-    autoConnect: true
+    autoConnect: true,
+    reconnectionAttempts: 5
   })
   return socket
 }
