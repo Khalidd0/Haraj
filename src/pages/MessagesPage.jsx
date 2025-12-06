@@ -48,10 +48,25 @@ function ThreadItem({ l, onOpen, unread, meId }){
   const visible = l.messages || []
   const last = visible[visible.length-1]
   const lastText = last ? last.text : 'No messages yet'
+
+  // Determine the other party's name for this thread
+  let otherName = ''
+  const sellerId = l.seller?.id
+  const sellerName = l.seller?.name || 'Seller'
+  const isSellerMe = meId && String(sellerId) === String(meId)
+
+  if (isSellerMe) {
+    const otherMsg = [...visible].reverse().find(m => m.from !== 'system' && String(m.from) !== String(meId))
+    otherName = otherMsg?.fromName || 'Buyer'
+  } else {
+    otherName = sellerName
+  }
+
   return (
     <button onClick={onOpen} className='w-full text-left px-4 py-3 border-b hover:bg-gray-50 flex items-start justify-between gap-2'>
       <div>
         <div className='font-medium line-clamp-1'>{l.title}</div>
+        <div className='text-xs text-gray-600 line-clamp-1'>{otherName}</div>
         <div className='text-xs text-gray-500 line-clamp-1'>{lastText}</div>
       </div>
       {unread ? <span className='inline-block w-2 h-2 rounded-full bg-red-500 mt-1' aria-label='New message'/> : null}
