@@ -34,7 +34,7 @@ export default function VerifyPage(){
         {ok ? (
           <>
             <div className='text-green-700'>Verified! Your account is activated.</div>
-            <button onClick={() => nav('/login')} className='btn btn-dark w-full'>Ok</button>
+            <button onClick={() => nav('/')} className='btn btn-dark w-full'>Ok</button>
           </>
         ) : error ? (
           <div className='text-red-600'>{error}</div>
