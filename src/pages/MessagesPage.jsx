@@ -79,6 +79,16 @@ export default function MessagesPage(){
     }
   }, [room?.listingId, room?.id])
 
+  // Short polling to keep messages fresh while viewing a thread
+  useEffect(() => {
+    if (!room?.listingId && !room?.id) return
+    const listingId = room.listingId || room.id
+    const interval = setInterval(() => {
+      loadMessagesForListing(listingId)
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [room?.listingId, room?.id, loadMessagesForListing])
+
   useEffect(()=>{
     if(room?.threadId){
       setLastSeen(map => ({ ...map, [room.threadId]: Date.now() }))
