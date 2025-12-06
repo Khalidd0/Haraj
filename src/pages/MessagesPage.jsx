@@ -35,7 +35,17 @@ function buildThreads(listings, messagesByListing, userId, includeListingId){
       const shouldInclude = filtered.length > 0 || (includeListingId && String(includeListingId) === String(l.id))
       return shouldInclude ? [{ ...l, threadId: String(l.id), listingId: l.id, participant: userId, messages: filtered }] : []
     }
-    const buyers = [...new Set(listingMessages.filter(m => m.from != null && String(m.from) !== String(userId) && m.from !== 'system').map(m => String(m.from)))]
+    // collect any counterparty from both from/to fields
+    const buyers = [...new Set(
+      listingMessages
+        .filter(m => m && m.from !== 'system')
+        .flatMap(m => {
+          const others = []
+          if (m.from && String(m.from) !== String(userId)) others.push(String(m.from))
+          if (m.to && String(m.to) !== String(userId)) others.push(String(m.to))
+          return others
+        })
+    )]
     if (buyers.length === 0) return [{ ...l, threadId: `${l.id}:none`, listingId: l.id, participant: null, empty: true, messages: [] }]
     return buyers.map(buyerId => ({
       ...l,
@@ -84,12 +94,24 @@ export default function MessagesPage(){
   const params = useParams()
   const roomId = params['*'] // catch-all segment
   const [lastSeen, setLastSeen] = useState({})
+  const loadedListingsRef = useRef(new Set())
 
   const [listingPart, buyerPart] = (roomId || '').split(':')
   const threads = buildThreads(listings, messagesByListing, user?.id, listingPart)
   const explicitRoom = threads.find(t => t.threadId === roomId) ||
     threads.find(t => String(t.listingId) === String(listingPart) && (!buyerPart || String(t.participant) === String(buyerPart)))
   const room = explicitRoom || threads[0]
+
+  // hydrate messages for all listings once so conversations appear after navigation
+  useEffect(()=> {
+    if(!user) return
+    listings.forEach(l => {
+      if(!l?.id) return
+      if(loadedListingsRef.current.has(l.id)) return
+      loadedListingsRef.current.add(l.id)
+      loadMessagesForListing(l.id)
+    })
+  }, [listings, user?.id])
 
   useEffect(()=> {
     if(room?.listingId || room?.id){
@@ -109,13 +131,18 @@ export default function MessagesPage(){
   const roomHasOtherParty = visibleMessages.some(m=> m.from!=null && String(m.from)!==String(user?.id))
   const isSeller = user && room.seller?.id === user.id
 
-  function onSend(text){
+  async function onSend(text){
     if(!text.trim()) return
     if(text.length>500) return alert('Max 500 chars')
     if(isSeller && (!roomHasOtherParty && !room.participant)) return alert('Wait for a buyer to contact you')
     const recipient = isSeller ? room.participant : room.seller?.id
     if(isSeller && !recipient) return alert('Select a buyer thread to reply')
-    sendMessage(room.listingId || room.id, user?.id, text, recipient).catch(err=> alert(err.message))
+    try{
+      await sendMessage(room.listingId || room.id, user?.id, text, recipient)
+      await loadMessagesForListing(room.listingId || room.id)
+    }catch(err){
+      alert(err.message)
+    }
   }
 
   function hasUnread(l){
@@ -158,11 +185,11 @@ function ChatRoom({ room, onSend, meId, meName, sellerId, sellerName, isSeller, 
     return found?.fromName || 'Buyer'
   }
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!canSendMessage) return
     const trimmed = text.trim()
     if (!trimmed) return
-    onSend(trimmed)
+    await onSend(trimmed)
     setText('')
   }
 
