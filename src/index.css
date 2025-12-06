@@ -7,9 +7,28 @@
 
 
 :root{
+  --bg: #f9fafb;
+  --text: #111827;
+  --card: #ffffff;
+  --border: #e5e7eb;
   --brand: #0E6B64; /* teal green from wireframe */
   --brand-2: #0A4D48;
   --accent: #F3B12B; /* golden button */
+}
+
+.dark {
+  --bg: #020617;
+  --text: #e5e7eb;
+  --card: #020617;
+  --border: #1f2937;
+  --brand: #22c55e;
+  --brand-2: #16a34a;
+  --accent: #f97316;
+}
+
+body{
+  background-color: var(--bg);
+  color: var(--text);
 }
 .btn{ @apply inline-flex items-center justify-center rounded px-3 py-2 font-medium; }
 .btn-primary{ background: var(--accent); color:#163; }
@@ -18,4 +37,4 @@
 .nav-link{ @apply text-white/90 hover:text-white px-2 py-1 rounded; }
 .pill{ @apply text-xs border rounded-full px-2 py-0.5 bg-white; }
 .input{ @apply border rounded px-3 py-2 w-full; }
-.card{ @apply bg-white border rounded-lg; }
+.card{ @apply border rounded-lg; background-color: var(--card); border-color: var(--border); }
