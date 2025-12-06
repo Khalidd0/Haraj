@@ -39,3 +39,26 @@ body{
 .pill{ @apply text-xs border rounded-full px-2 py-0.5 bg-white; }
 .input{ @apply border rounded px-3 py-2 w-full; }
 .card{ @apply border rounded-lg; background-color: var(--card); border-color: var(--border); }
+
+/* Dark mode refinements */
+.dark .card{
+  background-color: #020617;
+  color: #e5e7eb;
+  border-color: #1f2937;
+}
+
+.dark .input{
+  background-color: #020617;
+  color: #e5e7eb;
+  border-color: #1f2937;
+}
+
+.dark .input::placeholder{
+  color: #6b7280;
+}
+
+.dark .text-gray-500,
+.dark .text-gray-600,
+.dark .text-gray-700{
+  color: #e5e7eb;
+}
