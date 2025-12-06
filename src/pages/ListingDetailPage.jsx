@@ -86,7 +86,16 @@ export default function ListingDetailPage(){
         <div className='mt-4 card p-4'>
           <h3 className='font-semibold mb-2'>Key Features</h3>
           <ul className='text-sm list-disc pl-5 space-y-1'>
-            <li>On-campus pickup at {PICKUP_ZONES.find(z=>z.id===item.zoneId)?.name}</li>
+            <li>
+              On-campus pickup at{
+                (() => {
+                  const zone = PICKUP_ZONES.find(z => z.id === item.zoneId)
+                  if (item.zoneId === 999 && item.pickupNote) return ' ' + item.pickupNote
+                  if (zone?.name) return ' ' + zone.name
+                  return ' (pickup location not specified)'
+                })()
+              }
+            </li>
             <li>Condition: {item.condition}</li>
             <li>Verified KFUPM seller</li>
           </ul>

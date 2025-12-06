@@ -16,6 +16,7 @@ const listingValidators = [
   body('categoryId').isInt({ gt: 0 }).withMessage('categoryId required'),
   body('condition').isIn(['New', 'Like New', 'Very Good', 'Good', 'Acceptable']).withMessage('Invalid condition'),
   body('zoneId').isInt({ gt: 0 }).withMessage('zoneId required'),
+  body('pickupNote').optional().isString().trim(),
   body('images').optional().isArray().withMessage('images must be an array of URLs')
 ]
 
@@ -69,6 +70,7 @@ router.post(
       categoryId: req.body.categoryId,
       condition: req.body.condition,
       zoneId: req.body.zoneId,
+      pickupNote: req.body.pickupNote,
       images: Array.isArray(req.body.images) && req.body.images.length > 0 ? req.body.images : ['https://images.unsplash.com/photo-1518779578993-ec3579fee39f'],
       seller: { id: seller.id, name: seller.name, email: seller.email }
     }
@@ -89,6 +91,7 @@ router.patch(
     body('categoryId').optional().isInt({ gt: 0 }),
     body('condition').optional().isIn(['New', 'Like New', 'Very Good', 'Good', 'Acceptable']),
     body('zoneId').optional().isInt({ gt: 0 }),
+    body('pickupNote').optional().isString().trim(),
     body('images').optional().isArray(),
     body('status').optional().isIn(['active', 'reserved', 'sold'])
   ],
@@ -99,7 +102,7 @@ router.patch(
     if (listing.seller.id.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Only the seller or admin can update this listing' })
     }
-    const fields = ['title', 'description', 'price', 'categoryId', 'condition', 'zoneId', 'status', 'images']
+    const fields = ['title', 'description', 'price', 'categoryId', 'condition', 'zoneId', 'pickupNote', 'status', 'images']
     fields.forEach((f) => {
       if (req.body[f] !== undefined) {
         listing[f] = req.body[f]

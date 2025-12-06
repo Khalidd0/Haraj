@@ -9,7 +9,7 @@ export default function AddProductPage(){
   const { createListing } = useContext(ListingsContext)
   const { categories } = useContext(CategoryContext)
   const nav = useNavigate()
-  const [form, setForm] = useState({ title:'', description:'', price:'', categoryId:'1', condition:'Like New', zoneId:'1' })
+  const [form, setForm] = useState({ title:'', description:'', price:'', categoryId:'1', condition:'Like New', zoneId:String(PICKUP_ZONES[0].id), zoneNote:'' })
   const [images, setImages] = useState([])
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -29,6 +29,7 @@ export default function AddProductPage(){
         categoryId: Number(form.categoryId),
         condition: form.condition,
         zoneId: Number(form.zoneId),
+        pickupNote: form.zoneId === String(999) ? (form.zoneNote || '').trim() : '',
         images: urls
       })
       nav('/')
@@ -61,10 +62,21 @@ export default function AddProductPage(){
           <label className='text-sm'>Enter the Product Price</label>
           <input className='input' type='number' value={form.price} onChange={set('price')}/>
             <div className='grid sm:grid-cols-3 gap-3'>
-            <div><label className='text-sm'>Category</label><select className='input' value={form.categoryId} onChange={set('categoryId')}>{categories.map(c=> <option key={c.id} value={String(c.id)}>{c.name}</option>)}</select></div>
-            <div><label className='text-sm'>Condition</label><select className='input' value={form.condition} onChange={set('condition')}>{['New','Like New','Very Good','Good','Acceptable'].map(v=> <option key={v} value={v}>{v}</option>)}</select></div>
-            <div><label className='text-sm'>Pickup Zone</label><select className='input' value={form.zoneId} onChange={set('zoneId')}>{PICKUP_ZONES.map(z=> <option key={z.id} value={String(z.id)}>{z.name}</option>)}</select></div>
-          </div>
+              <div><label className='text-sm'>Category</label><select className='input' value={form.categoryId} onChange={set('categoryId')}>{categories.map(c=> <option key={c.id} value={String(c.id)}>{c.name}</option>)}</select></div>
+              <div><label className='text-sm'>Condition</label><select className='input' value={form.condition} onChange={set('condition')}>{['New','Like New','Very Good','Good','Acceptable'].map(v=> <option key={v} value={v}>{v}</option>)}</select></div>
+              <div><label className='text-sm'>Pickup Zone</label><select className='input' value={form.zoneId} onChange={set('zoneId')}>{PICKUP_ZONES.map(z=> <option key={z.id} value={String(z.id)}>{z.name}</option>)}</select></div>
+              {form.zoneId === String(999) && (
+                <div className='sm:col-span-3'>
+                  <label className='text-sm'>Other pickup location</label>
+                  <input
+                    className='input'
+                    value={form.zoneNote}
+                    onChange={set('zoneNote')}
+                    placeholder='e.g. Building 838, Spokes Hub, etc.'
+                  />
+                </div>
+              )}
+            </div>
         </div>
       </div>
       <aside className='lg:col-span-4'>

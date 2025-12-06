@@ -15,6 +15,7 @@ const listingSchema = new mongoose.Schema({
   categoryId: { type: Number, required: true },
   condition: { type: String, enum: ['New', 'Like New', 'Very Good', 'Good', 'Acceptable'], default: 'Good' },
   zoneId: { type: Number, required: true },
+  pickupNote: { type: String, trim: true },
   images: { type: [String], default: [] },
   seller: {
     id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

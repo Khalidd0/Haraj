@@ -9,7 +9,7 @@ export default function PostItemPage(){
   const { createListing } = useContext(ListingsContext)
   const { categories } = useContext(CategoryContext)
   const nav = useNavigate()
-  const [form, setForm] = useState({ title:'', price:'', categoryId:'1', condition:'Like New', zoneId:'1', description:'' })
+  const [form, setForm] = useState({ title:'', price:'', categoryId:'1', condition:'Like New', zoneId:String(PICKUP_ZONES[0].id), zoneNote:'', description:'' })
   const [images, setImages] = useState([])
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -26,6 +26,7 @@ export default function PostItemPage(){
         categoryId: Number(form.categoryId),
         condition: form.condition,
         zoneId: Number(form.zoneId),
+        pickupNote: form.zoneId === String(999) ? (form.zoneNote || '').trim() : '',
         images: urls,
         description: form.description || 'No description'
       })
@@ -81,6 +82,17 @@ export default function PostItemPage(){
               {PICKUP_ZONES.map(z=> <option key={z.id} value={String(z.id)}>{z.name}</option>)}
             </select>
           </div>
+          {form.zoneId === String(999) && (
+            <div className='md:col-span-3'>
+              <label className='text-sm'>Other pickup location</label>
+              <input
+                value={form.zoneNote}
+                onChange={set('zoneNote')}
+                className='mt-1 border rounded w-full px-3 py-2'
+                placeholder='e.g. Building 838, Spokes Hub, etc.'
+              />
+            </div>
+          )}
         </div>
         <div className='space-y-2'>
           <div className='flex items-center justify-between'>
