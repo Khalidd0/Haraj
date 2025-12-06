@@ -50,7 +50,7 @@ function buildThreads(listings, messagesByListing, userId, includeListingId){
 function ThreadItem({ l, onOpen, unread, meId }){
   const visible = (l.messages || []).filter(Boolean)
   const last = visible[visible.length-1]
-  const lastText = last ? last.text : 'No messages yet'
+  const lastText = last ? (last.text || last.message || last.content || 'No messages yet') : 'No messages yet'
 
   // Determine the other party's name for this thread
   let otherName = ''
@@ -176,7 +176,7 @@ function ChatRoom({ room, onSend, meId, meName, sellerId, sellerName, isSeller, 
           return (
             <div key={m.id || idx} className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow ${mine ? 'ml-auto bg-gray-900 text-white' : (m.from==='system' ? 'mx-auto bg-gray-200' : 'bg-white border')}`}>
               <div className='text-[10px] text-gray-500 mb-0.5'>{fromLabel}</div>
-              {m.text}
+              {m.text || m.message || m.content || ''}
             </div>
           )
         })}
