@@ -1,9 +1,9 @@
 import { useContext, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
 
 export default function LoginPage(){
-  const nav = useNavigate(); const { login } = useContext(AuthContext)
+  const nav = useNavigate(); const { login, user } = useContext(AuthContext)
   const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [error, setError]=useState('')
   const submit = async (e) => {
     e.preventDefault()
@@ -16,6 +16,7 @@ export default function LoginPage(){
       setError(err.message)
     }
   }
+  if (user) return <Navigate to={user.role === 'admin' ? '/admin' : '/'} replace />
   return (
     <div className="min-h-[78vh] grid md:grid-cols-2 gap-8 container-px">
       <div className="hidden md:flex flex-col justify-center">
