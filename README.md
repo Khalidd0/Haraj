@@ -139,3 +139,22 @@ curl -X POST http://localhost:5000/api/listings/$LISTING_ID/messages \
   -H "Authorization: Bearer $SELLER_TOKEN" -H "Content-Type: application/json" \
   -d '{"text":"Still available.","to":"<buyerId>"}'
 ```
+
+## 👥 Team Members
+- Naif Fahad Alhammad — Frontend (React, Vite, Tailwind)
+- Khaled — Backend (Node.js, Express, MongoDB, Authentication)
+- Aziz — Database & API Integration (MongoDB Models, Validation)
+
+
+## 🌐 Live Links
+- Frontend (Vercel): [https://haraj-wheat.vercel.app/](https://haraj-wheat.vercel.app/)
+- Backend (Render): [https://haraj-ljc9.onrender.com](https://haraj-ljc9.onrender.com)
+- Demo Video: [Google Drive Link](https://drive.google.com/file/d/1WoYC7LHU2hdBT0yPtwEeGdnop0suqlbR/view?usp=drive_link)
+
+## 🧪 Demo Account
+You can log in using the following demo credentials:
+- Email: admin@kfupm.edu.sa
+- Password: qwe12345
+- or
+- Email: test@kfupm.edu.sa
+- Password: kfupm123
