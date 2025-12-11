@@ -141,9 +141,10 @@ curl -X POST http://localhost:5000/api/listings/$LISTING_ID/messages \
 ```
 
 ## 👥 Team Members
-- Naif Fahad Alhammad — Frontend (React, Vite, Tailwind)
-- Khaled — Backend (Node.js, Express, MongoDB, Authentication)
-- Aziz — Database & API Integration (MongoDB Models, Validation)
+- NAIF ALHAMMAD — Frontend (React, Vite, Tailwind)
+- KHALED MATHBAQ — Backend (Node.js, Express, MongoDB, Authentication)
+- ABDULAZIZ ALKATHIRI — Database & API Integration (MongoDB Models, Validation)
+
 
 
 ## 🌐 Live Links
